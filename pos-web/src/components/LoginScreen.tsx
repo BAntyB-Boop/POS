@@ -23,10 +23,13 @@ export default function LoginScreen({ storeName, onLogin }: Props) {
     if (loading) return;
     setError('');
     setLoading(true);
+    const startedAt = Date.now();
     try {
       const { token, user } = await api.login(username, password);
       localStorage.setItem('meow-pos-token', token);
-      onLogin(user);
+      // รอให้ animation น้ำขึ้นเล่นครบ 2 วิ (นับจากตอนกดปุ่ม) ก่อนพาเข้าหน้าใน
+      const remaining = Math.max(0, 2000 - (Date.now() - startedAt));
+      loginTimer.current = setTimeout(() => onLogin(user), remaining);
     } catch (err: any) {
       setError(err?.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่');
       setLoading(false);

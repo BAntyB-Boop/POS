@@ -11,6 +11,7 @@ interface Props {
   pCat: string;
   onSelectPCat: (id: string) => void;
   lowStockThreshold: number;
+  isAdmin: boolean;
   onOpenCat: () => void;
   onOpenAdd: () => void;
   onEdit: (id: string) => void;
@@ -18,7 +19,7 @@ interface Props {
 }
 
 export default function ProductsScreen({
-  categories, products, pSearch, onPSearch, pCat, onSelectPCat, lowStockThreshold,
+  categories, products, pSearch, onPSearch, pCat, onSelectPCat, lowStockThreshold, isAdmin,
   onOpenCat, onOpenAdd, onEdit, onDelete,
 }: Props) {
   const catName = (id: string) => categories.find((c) => c.id === id)?.name || 'อื่นๆ';
@@ -39,14 +40,17 @@ export default function ProductsScreen({
             </button>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={onOpenCat} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '11px 16px', borderRadius: 13, border: '1.5px solid var(--line)', background: 'var(--panel)', color: 'var(--ink)', font: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-            <span>หมวดหมู่</span>
-          </button>
-          <button onClick={onOpenAdd} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '11px 18px', borderRadius: 13, border: 'none', background: 'var(--brand)', color: '#fff', font: 'inherit', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: 'var(--shadow)' }}>
-            <span style={{ fontSize: 17, lineHeight: 1 }}>+</span><span>เพิ่มสินค้า</span>
-          </button>
-        </div>
+        {/* เพิ่ม/แก้/ลบ สินค้าและหมวดหมู่เป็นสิทธิ์ admin ฝั่ง backend — cashier เห็นแบบอ่านอย่างเดียว */}
+        {isAdmin && (
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={onOpenCat} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '11px 16px', borderRadius: 13, border: '1.5px solid var(--line)', background: 'var(--panel)', color: 'var(--ink)', font: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              <span>จัดการหมวดหมู่</span>
+            </button>
+            <button onClick={onOpenAdd} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '11px 18px', borderRadius: 13, border: 'none', background: 'var(--brand)', color: '#fff', font: 'inherit', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: 'var(--shadow)' }}>
+              <span style={{ fontSize: 17, lineHeight: 1 }}>+</span><span>เพิ่มสินค้า</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="table-scroll" style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18 }}>
@@ -72,8 +76,12 @@ export default function ProductsScreen({
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--brand)' }}>{money(p.price)}</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: p.stock <= lowStockThreshold ? 'var(--danger)' : 'var(--ink)' }}>{p.stock}</div>
             <div style={{ display: 'flex', gap: 7, justifyContent: 'flex-end' }}>
-              <button onClick={() => onEdit(p.id)} style={{ padding: '7px 12px', borderRadius: 9, border: '1.5px solid var(--line)', background: 'var(--panel)', color: 'var(--ink)', font: 'inherit', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>แก้ไข</button>
-              <button onClick={() => onDelete(p.id)} style={{ padding: '7px 12px', borderRadius: 9, border: '1.5px solid #FADBD8', background: '#FDECEA', color: 'var(--danger)', font: 'inherit', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>ลบ</button>
+              {isAdmin && (
+                <>
+                  <button onClick={() => onEdit(p.id)} style={{ padding: '7px 12px', borderRadius: 9, border: '1.5px solid var(--line)', background: 'var(--panel)', color: 'var(--ink)', font: 'inherit', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>แก้ไข</button>
+                  <button onClick={() => onDelete(p.id)} style={{ padding: '7px 12px', borderRadius: 9, border: '1.5px solid #FADBD8', background: '#FDECEA', color: 'var(--danger)', font: 'inherit', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>ลบ</button>
+                </>
+              )}
             </div>
           </div>
         ))}

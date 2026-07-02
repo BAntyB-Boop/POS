@@ -47,7 +47,7 @@ export function mapProductFromDb(p: any): Product {
     cost: (p.cost_price || 0) / 100,
     cat: String(p.category_id),
     stock: p.quantity_in_stock || 0,
-    icon: p.icon || '📦',
+    icon: p.icon || '',
     img: p.image_url || null,
     barcode: p.barcode || '',
   };
@@ -58,7 +58,7 @@ export function mapCategoryFromDb(c: any): Category {
   return {
     id: String(c.id),
     name: c.name,
-    icon: c.icon || '🏷️',
+    icon: c.icon || '',
   };
 }
 
@@ -68,7 +68,7 @@ export function mapSaleFromDb(s: any): Sale {
   const items = (s.items || []).map((item: any) => ({
     id: String(item.product_id),
     name: item.product_name || '',
-    icon: item.icon || '📦',
+    icon: item.icon || '',
     img: item.image_url || null,
     cat: String(item.category_id || ''),
     price: (item.unit_price || 0) / 100,
@@ -123,6 +123,20 @@ export const api = {
       body: JSON.stringify({ name: form.name, icon: form.icon }),
     });
     return mapCategoryFromDb(data);
+  },
+
+  async updateCategory(id: string, name: string): Promise<Category> {
+    const data = await request<any>(`/categories/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name }),
+    });
+    return mapCategoryFromDb(data);
+  },
+
+  async deleteCategory(id: string): Promise<void> {
+    await request<void>(`/categories/${id}`, {
+      method: 'DELETE',
+    });
   },
 
   async getProducts(): Promise<Product[]> {

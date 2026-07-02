@@ -103,6 +103,7 @@ function App(props: PosOptions) {
             pCat={pos.pCat}
             onSelectPCat={pos.setPCat}
             lowStockThreshold={pos.lowStockThreshold}
+            isAdmin={user.role === 'admin'}
             onOpenCat={pos.openCat}
             onOpenAdd={pos.openAdd}
             onEdit={pos.openEdit}
@@ -157,10 +158,13 @@ function App(props: PosOptions) {
 
       {pos.showCatModal && (
         <CategoryModal
+          categories={pos.categories}
           catForm={pos.catForm}
           onUpdate={pos.setCatForm}
           onClose={pos.closeCat}
           onSave={pos.saveCat}
+          onRename={pos.renameCat}
+          onDelete={pos.deleteCat}
         />
       )}
 

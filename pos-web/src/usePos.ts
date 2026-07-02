@@ -179,10 +179,17 @@ export function usePos(opts: PosOptions = {}, user: User | null) {
   const closeReceipt = useCallback(() => setShowReceipt(false), []);
 
   const openAdd = useCallback(() => {
+    // ต้องมีหมวดหมู่ก่อนถึงจะเพิ่มสินค้าได้ (backend บังคับ category_id)
+    if (categories.length === 0) {
+      toast('กรุณาเพิ่มหมวดหมู่ก่อนเพิ่มสินค้า', 'warn');
+      setShowCatModal(true);
+      setCatForm({ name: '', icon: '' });
+      return;
+    }
     setShowProductModal(true);
     setEditingId(null);
     setForm({ name: '', description: '', price: '', cat: categories[0]?.id || '', stock: '', barcode: '', icon: '', img: null });
-  }, [categories]);
+  }, [categories, toast]);
 
   const openEdit = useCallback((id: string) => {
     const p = products.find((x) => x.id === id);
@@ -215,6 +222,7 @@ export function usePos(opts: PosOptions = {}, user: User | null) {
 
   const saveProduct = useCallback(async () => {
     if (!form.name.trim()) { toast('กรุณาใส่ชื่อสินค้า', 'warn'); return; }
+    if (!form.cat) { toast('กรุณาเลือกหมวดหมู่', 'warn'); return; }
     const price = parseFloat(form.price) || 0;
     if (price <= 0) { toast('กรุณาใส่ราคา', 'warn'); return; }
     try {
@@ -256,12 +264,41 @@ export function usePos(opts: PosOptions = {}, user: User | null) {
     try {
       const saved = await api.saveCategory(catForm);
       setCategories((prev) => prev.concat([saved]));
-      setShowCatModal(false);
+      // ไม่ปิด modal เพื่อให้เพิ่มหลายหมวดต่อกันได้ แค่เคลียร์ช่องกรอก
+      setCatForm({ name: '', icon: '' });
       toast('เพิ่มหมวดหมู่แล้ว', 'ok');
     } catch (err: any) {
       toast(err?.message || 'ไม่สามารถเพิ่มหมวดหมู่ได้', 'warn');
     }
   }, [catForm, toast]);
+
+  const renameCat = useCallback(async (id: string, name: string) => {
+    if (!name.trim()) { toast('กรุณาใส่ชื่อหมวดหมู่', 'warn'); return; }
+    try {
+      const saved = await api.updateCategory(id, name.trim());
+      setCategories((prev) => prev.map((c) => (c.id === id ? saved : c)));
+      toast('แก้ไขหมวดหมู่แล้ว', 'ok');
+    } catch (err: any) {
+      toast(err?.message || 'ไม่สามารถแก้ไขหมวดหมู่ได้', 'warn');
+    }
+  }, [toast]);
+
+  const deleteCat = useCallback(async (id: string) => {
+    // backend ไม่ให้ลบหมวดที่ยังมีสินค้า — เช็คก่อนเพื่อแจ้งเป็นภาษาไทย
+    if (products.some((p) => p.cat === id)) {
+      toast('ลบไม่ได้: ยังมีสินค้าอยู่ในหมวดหมู่นี้', 'warn');
+      return;
+    }
+    try {
+      await api.deleteCategory(id);
+      setCategories((prev) => prev.filter((c) => c.id !== id));
+      setActiveCat((prev) => (prev === id ? 'all' : prev));
+      setPCat((prev) => (prev === id ? 'all' : prev));
+      toast('ลบหมวดหมู่แล้ว', 'ok');
+    } catch (err: any) {
+      toast(err?.message || 'ไม่สามารถลบหมวดหมู่ได้', 'warn');
+    }
+  }, [products, toast]);
 
   const setTheme = useCallback((t: ThemeName) => setThemeState(t), []);
 
@@ -283,7 +320,7 @@ export function usePos(opts: PosOptions = {}, user: User | null) {
     addToCart, decCart, removeCart, clearCart, cartTotal,
     openPay, closePay, setCash, confirmPay, closeReceipt,
     openAdd, openEdit, closeProduct, onImg, genBarcode, saveProduct, deleteProduct,
-    openCat, closeCat, saveCat,
+    openCat, closeCat, saveCat, renameCat, deleteCat,
     lowStockThreshold: opts.lowStockThreshold ?? 5,
     storeName: opts.storeName || 'โชคดีการค้า',
   };
