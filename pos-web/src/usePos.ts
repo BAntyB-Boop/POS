@@ -17,6 +17,7 @@ export function usePos(opts: PosOptions = {}) {
   const [categories, setCategories] = useState<Category[]>(CATEGORIES);
   const [products, setProducts] = useState<Product[]>(() => makeInitialProducts());
   const [cart, setCart] = useState<CartMap>({});
+  const [orderNote, setOrderNote] = useState('');
   const [search, setSearch] = useState('');
   const [activeCat, setActiveCat] = useState('all');
   const [pSearch, setPSearch] = useState('');
@@ -24,7 +25,7 @@ export function usePos(opts: PosOptions = {}) {
 
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<ProductForm>({ name: '', price: '', cat: 'drink', stock: '', barcode: '', icon: '📦', img: null });
+  const [form, setForm] = useState<ProductForm>({ name: '', description: '', price: '', cat: 'drink', stock: '', barcode: '', icon: '📦', img: null });
 
   const [showCatModal, setShowCatModal] = useState(false);
   const [catForm, setCatForm] = useState<CategoryForm>({ name: '', icon: '🏷️' });
@@ -96,7 +97,7 @@ export function usePos(opts: PosOptions = {}) {
     });
   }, []);
 
-  const clearCart = useCallback(() => setCart({}), []);
+  const clearCart = useCallback(() => { setCart({}); setOrderNote(''); }, []);
 
   const cartTotal = useMemo(() => {
     return Object.keys(cart).reduce((s, id) => {
@@ -131,22 +132,23 @@ export function usePos(opts: PosOptions = {}) {
       return { id, name: p.name, icon: p.icon, img: p.img, cat: p.cat, price: p.price, qty, lineTotal: p.price * qty };
     });
     const nextProducts = products.map((p) => (cart[p.id] ? { ...p, stock: Math.max(0, p.stock - cart[p.id]) } : p));
-    const sale: Sale = { no: sales.length + 1, ts: Date.now(), items, total, method: payMethod, received, change };
+    const sale: Sale = { no: sales.length + 1, ts: Date.now(), items, total, method: payMethod, received, change, note: orderNote.trim() };
     setProducts(nextProducts);
     setSales((prev) => prev.concat([sale]));
     setCart({});
+    setOrderNote('');
     setShowPay(false);
     setShowReceipt(true);
     setReceipt(sale);
     toast('ขายสำเร็จ 🎉', 'ok');
-  }, [cart, cartTotal, cashReceived, payMethod, products, sales.length, toast]);
+  }, [cart, cartTotal, cashReceived, orderNote, payMethod, products, sales.length, toast]);
 
   const closeReceipt = useCallback(() => setShowReceipt(false), []);
 
   const openAdd = useCallback(() => {
     setShowProductModal(true);
     setEditingId(null);
-    setForm({ name: '', price: '', cat: categories[0]?.id || '', stock: '', barcode: '', icon: '📦', img: null });
+    setForm({ name: '', description: '', price: '', cat: categories[0]?.id || '', stock: '', barcode: '', icon: '📦', img: null });
   }, [categories]);
 
   const openEdit = useCallback((id: string) => {
@@ -154,7 +156,7 @@ export function usePos(opts: PosOptions = {}) {
     if (!p) return;
     setShowProductModal(true);
     setEditingId(id);
-    setForm({ name: p.name, price: String(p.price), cat: p.cat, stock: String(p.stock), barcode: p.barcode || '', icon: p.icon, img: p.img });
+    setForm({ name: p.name, description: p.description || '', price: String(p.price), cat: p.cat, stock: String(p.stock), barcode: p.barcode || '', icon: p.icon, img: p.img });
   }, [products]);
 
   const closeProduct = useCallback(() => setShowProductModal(false), []);
@@ -185,13 +187,13 @@ export function usePos(opts: PosOptions = {}) {
     const stock = parseInt(form.stock, 10) || 0;
     if (editingId) {
       setProducts((prev) => prev.map((p) => (p.id === editingId
-        ? { ...p, name: form.name.trim(), price, cat: form.cat, stock, barcode: form.barcode, icon: form.icon, img: form.img }
+        ? { ...p, name: form.name.trim(), description: form.description.trim(), price, cat: form.cat, stock, barcode: form.barcode, icon: form.icon, img: form.img }
         : p)));
       setShowProductModal(false);
       toast('บันทึกการแก้ไขแล้ว', 'ok');
     } else {
       const id = 'p' + Date.now();
-      const np: Product = { id, name: form.name.trim(), price, cost: Math.round(price * 0.72), cat: form.cat, stock, barcode: form.barcode, icon: form.icon, img: form.img };
+      const np: Product = { id, name: form.name.trim(), description: form.description.trim(), price, cost: Math.round(price * 0.72), cat: form.cat, stock, barcode: form.barcode, icon: form.icon, img: form.img };
       setProducts((prev) => [np, ...prev]);
       setShowProductModal(false);
       setScreen('products');
@@ -227,7 +229,7 @@ export function usePos(opts: PosOptions = {}) {
     screen, setScreen,
     theme, setTheme,
     categories, products,
-    cart, search, setSearch, activeCat, setActiveCat,
+    cart, orderNote, setOrderNote, search, setSearch, activeCat, setActiveCat,
     pSearch, setPSearch, pCat, setPCat,
     showProductModal, editingId, form, updForm, setForm,
     showCatModal, catForm, setCatForm,

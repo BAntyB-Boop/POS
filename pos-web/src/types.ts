@@ -12,6 +12,7 @@ export interface Category {
 export interface Product {
   id: string;
   name: string;
+  description: string;
   price: number;
   cost: number;
   cat: string;
@@ -44,10 +45,12 @@ export interface Sale {
   method: PayMethod;
   received: number;
   change: number;
+  note: string;
 }
 
 export interface ProductForm {
   name: string;
+  description: string;
   price: string;
   cat: string;
   stock: string;

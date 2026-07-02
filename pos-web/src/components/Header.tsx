@@ -5,6 +5,7 @@ interface Props {
   productCount: number;
   now: number;
   onSetTheme: (t: ThemeName) => void;
+  onToggleSidebar: () => void;
 }
 
 const swatch = (bg: string): React.CSSProperties => ({
@@ -12,7 +13,7 @@ const swatch = (bg: string): React.CSSProperties => ({
   boxShadow: '0 0 0 1.5px var(--line)', cursor: 'pointer', background: bg,
 });
 
-export default function Header({ screen, productCount, now, onSetTheme }: Props) {
+export default function Header({ screen, productCount, now, onSetTheme, onToggleSidebar }: Props) {
   const title = screen === 'pos' ? 'ขายหน้าร้าน' : screen === 'products' ? 'จัดการสินค้า' : 'รายงานยอดขาย';
   const sub = screen === 'pos' ? 'เลือกสินค้าเพื่อเพิ่มลงตะกร้า' : screen === 'products' ? `${productCount} รายการในระบบ` : 'ภาพรวมการขายวันนี้';
   const d = new Date(now);
@@ -20,10 +21,19 @@ export default function Header({ screen, productCount, now, onSetTheme }: Props)
   const clockLabel = d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
   return (
-    <header style={{ height: 66, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', borderBottom: '1px solid var(--line)', background: 'var(--panel)', gap: 16 }}>
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontFamily: "'Itim',cursive", fontSize: 21, lineHeight: 1.1, color: 'var(--ink)' }}>{title}</div>
-        <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{sub}</div>
+    <header style={{ height: 66, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 18px 0 12px', borderBottom: '1px solid var(--line)', background: 'var(--panel)', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+        <button
+          onClick={onToggleSidebar}
+          title="เปิด/ปิดเมนู"
+          style={{ width: 40, height: 40, flex: 'none', border: 'none', borderRadius: 12, background: 'transparent', cursor: 'pointer', fontSize: 20, color: 'var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          ☰
+        </button>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontFamily: "'Itim',cursive", fontSize: 21, lineHeight: 1.1, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</div>
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</div>
+        </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', paddingRight: 16, borderRight: '1px solid var(--line)' }}>

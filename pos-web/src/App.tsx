@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import PosScreen from './components/PosScreen';
@@ -12,6 +13,8 @@ import { usePos, type PosOptions } from './usePos';
 
 function App(props: PosOptions) {
   const pos = usePos(props);
+  // จอกว้างเปิด sidebar ไว้ก่อน จอแคบ (iPad แนวตั้ง/มือถือ) เริ่มแบบปิด
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1024);
 
   return (
     <div
@@ -24,10 +27,22 @@ function App(props: PosOptions) {
         background: 'var(--bg)', fontFamily: "'Noto Sans Thai',system-ui,sans-serif", color: 'var(--ink)',
       }}
     >
-      <Sidebar storeName={pos.storeName} screen={pos.screen} onNavigate={pos.setScreen} />
+      <Sidebar
+        storeName={pos.storeName}
+        screen={pos.screen}
+        onNavigate={pos.setScreen}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <Header screen={pos.screen} productCount={pos.products.length} now={pos.now} onSetTheme={pos.setTheme} />
+        <Header
+          screen={pos.screen}
+          productCount={pos.products.length}
+          now={pos.now}
+          onSetTheme={pos.setTheme}
+          onToggleSidebar={() => setSidebarOpen((v) => !v)}
+        />
 
         {pos.screen === 'pos' && (
           <PosScreen
@@ -40,6 +55,8 @@ function App(props: PosOptions) {
             lowStockThreshold={pos.lowStockThreshold}
             onAdd={pos.addToCart}
             cart={pos.cart}
+            orderNote={pos.orderNote}
+            onOrderNote={pos.setOrderNote}
             onInc={pos.addToCart}
             onDec={pos.decCart}
             onClearCart={pos.clearCart}

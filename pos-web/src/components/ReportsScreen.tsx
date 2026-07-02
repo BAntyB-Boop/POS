@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import type { Category, Product, ReportPeriod, Sale } from '../types';
 import { tabStyle } from '../styleHelpers';
 import { money } from '../theme';
+import BillModal from './BillModal';
+import DayDetailModal from './DayDetailModal';
 
 interface Props {
   categories: Category[];
@@ -18,6 +21,10 @@ interface Props {
 export default function ReportsScreen({
   categories, products, sales, now, reportPeriod, onSetPeriod, monthOffset, onPrevMonth, onNextMonth, lowStockThreshold,
 }: Props) {
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [selectedBill, setSelectedBill] = useState<Sale | null>(null);
+  const [billSearch, setBillSearch] = useState('');
+
   const isMonth = reportPeriod === 'month';
   const rnow = new Date(now);
   const selMonth = new Date(rnow.getFullYear(), rnow.getMonth() + monthOffset, 1);
@@ -54,8 +61,18 @@ export default function ReportsScreen({
   const cmax = cvals.length ? Math.max(...cvals) : 1;
   const catBreakdown = categories.filter((c) => cagg[c.id]);
 
-  const recent = periodSales.slice().reverse().slice(0, 6);
+  // ค้นหาบิลจากทุกช่วงเวลา (เลขบิลเป็นเลขรวมทั้งระบบ) ส่วนโหมดปกติแสดงเฉพาะบิลในช่วงที่เลือก
+  const bq = billSearch.trim().toLowerCase();
+  const recent = bq
+    ? sales.filter((s) => {
+        const noStr = String(s.no);
+        const padded = '#' + noStr.padStart(4, '0');
+        return noStr.includes(bq.replace(/^#/, '')) || padded.includes(bq) || s.items.some((i) => i.name.toLowerCase().includes(bq));
+      }).slice().reverse().slice(0, 10)
+    : periodSales.slice().reverse().slice(0, 6);
   const lowStock = products.filter((p) => p.stock <= lowStockThreshold).sort((a, b) => a.stock - b.stock).slice(0, 8);
+
+  const dayBills = selectedDay != null ? periodSales.filter((s) => new Date(s.ts).getDate() === selectedDay) : [];
 
   const nextDisabled = monthOffset >= 0;
 
@@ -86,8 +103,14 @@ export default function ReportsScreen({
         <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
           <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>📈 ยอดขายรายวัน · {selMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</div>
           {dayKeys.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>ยังไม่มียอดขายในเดือนนี้ ลองขายสักบิลดูนะ 🐱</div>}
+          {dayKeys.length > 0 && <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>💡 แตะวันที่เพื่อดูรายละเอียดของวันนั้น</div>}
           {dayKeys.map((k) => (
-            <div key={k} style={{ marginBottom: 13 }}>
+            <button
+              key={k}
+              onClick={() => setSelectedDay(k)}
+              className="day-row"
+              style={{ display: 'block', width: '100%', marginBottom: 6, padding: '7px 10px', border: 'none', borderRadius: 12, background: 'transparent', cursor: 'pointer', font: 'inherit', color: 'inherit', textAlign: 'left', transition: '.12s' }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                 <span style={{ fontSize: 13.5, fontWeight: 600 }}>วันที่ {k}</span>
                 <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>{money(dayAgg[k])}</span>
@@ -95,7 +118,7 @@ export default function ReportsScreen({
               <div style={{ background: 'var(--bg)', borderRadius: 999 }}>
                 <div style={{ height: 8, borderRadius: 999, background: 'var(--brand)', width: Math.round((dayAgg[k] / dmax) * 100) + '%' }} />
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -152,22 +175,55 @@ export default function ReportsScreen({
         </div>
 
         <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
-          <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>🧾 บิลล่าสุด</div>
-          {recent.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>ยังไม่มีบิลวันนี้</div>}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+            <div style={{ fontFamily: "'Itim',cursive", fontSize: 18 }}>🧾 {bq ? 'ผลค้นหาบิล' : 'บิลล่าสุด'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'var(--bg)', border: '1.5px solid var(--line)', borderRadius: 11, padding: '7px 12px', width: 190 }}>
+              <span style={{ fontSize: 13 }}>🔍</span>
+              <input
+                value={billSearch}
+                onChange={(e) => setBillSearch(e.target.value)}
+                placeholder="เลขบิล / ชื่อสินค้า..."
+                style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 12.5, color: 'var(--ink)', width: '100%' }}
+              />
+              {bq && (
+                <button onClick={() => setBillSearch('')} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--muted)', fontSize: 12, padding: 0 }}>✕</button>
+              )}
+            </div>
+          </div>
+          {recent.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>{bq ? 'ไม่พบบิลที่ค้นหา 🙀' : 'ยังไม่มีบิลวันนี้'}</div>}
           {recent.map((r) => (
-            <div key={r.no} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid var(--line)' }}>
+            <button
+              key={r.no}
+              onClick={() => setSelectedBill(r)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 4px', border: 'none', borderBottom: '1px solid var(--line)', background: 'transparent', cursor: 'pointer', font: 'inherit', color: 'inherit', textAlign: 'left' }}
+            >
               <div>
                 <div style={{ fontSize: 13.5, fontWeight: 700 }}>#{String(r.no).padStart(4, '0')}</div>
-                <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{new Date(r.ts).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น. · {r.items.length} รายการ · {r.items.reduce((a, i) => a + i.qty, 0)} ชิ้น</div>
+                <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>
+                  {bq
+                    ? new Date(r.ts).toLocaleString('th-TH', { day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' })
+                    : new Date(r.ts).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น. · {r.items.length} รายการ · {r.items.reduce((a, i) => a + i.qty, 0)} ชิ้น
+                </div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--brand)' }}>{money(r.total)}</div>
                 <div style={{ fontSize: 11, color: 'var(--muted)' }}>{r.method === 'cash' ? 'เงินสด' : 'พร้อมเพย์'}</div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>
+
+      {selectedDay != null && (
+        <DayDetailModal
+          date={new Date(selMonth.getFullYear(), selMonth.getMonth(), selectedDay)}
+          bills={dayBills}
+          onClose={() => setSelectedDay(null)}
+          onSelectBill={(s) => setSelectedBill(s)}
+        />
+      )}
+
+      {selectedBill && <BillModal sale={selectedBill} onClose={() => setSelectedBill(null)} />}
     </div>
   );
 }

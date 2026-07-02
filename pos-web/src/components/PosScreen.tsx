@@ -12,6 +12,8 @@ interface Props {
   lowStockThreshold: number;
   onAdd: (id: string) => void;
   cart: CartMap;
+  orderNote: string;
+  onOrderNote: (v: string) => void;
   onInc: (id: string) => void;
   onDec: (id: string) => void;
   onClearCart: () => void;
@@ -20,10 +22,10 @@ interface Props {
 
 export default function PosScreen({
   categories, products, search, onSearch, activeCat, onSelectCat, lowStockThreshold,
-  onAdd, cart, onInc, onDec, onClearCart, onOpenPay,
+  onAdd, cart, orderNote, onOrderNote, onInc, onDec, onClearCart, onOpenPay,
 }: Props) {
   const q = search.trim().toLowerCase();
-  const filtered = products.filter((p) => (activeCat === 'all' || p.cat === activeCat) && (!q || p.name.toLowerCase().includes(q)));
+  const filtered = products.filter((p) => (activeCat === 'all' || p.cat === activeCat) && (!q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)));
   const cartIds = Object.keys(cart);
   const total = cartIds.reduce((s, id) => {
     const p = products.find((x) => x.id === id);
@@ -55,7 +57,7 @@ export default function PosScreen({
             </div>
           )}
           {filtered.length > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(148px,1fr))', gap: 13, paddingBottom: 12 }}>
+            <div className="product-grid">
               {filtered.map((p) => (
                 <button
                   key={p.id}
@@ -74,6 +76,7 @@ export default function PosScreen({
                     <div style={{ width: 56, height: 56, borderRadius: 15, background: 'var(--soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30 }}>{p.icon}</div>
                   )}
                   <div style={{ fontSize: 13.5, fontWeight: 600, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 35 }}>{p.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 30 }}>{p.description}</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
                     <span style={{ fontFamily: "'Itim',cursive", fontSize: 18, color: 'var(--brand)' }}>{money(p.price)}</span>
                     <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>คงเหลือ {p.stock}</span>
@@ -85,7 +88,7 @@ export default function PosScreen({
         </div>
       </div>
 
-      <aside style={{ width: 372, flex: 'none', borderLeft: '1px solid var(--line)', background: 'var(--panel)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <aside className="cart-aside">
         <div style={{ padding: '18px 20px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
             <span style={{ fontSize: 20 }}>🛒</span>
@@ -130,6 +133,16 @@ export default function PosScreen({
           })}
         </div>
         <div style={{ padding: '16px 20px', borderTop: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9, background: 'var(--bg)', border: '1.5px solid var(--line)', borderRadius: 13, padding: '10px 13px' }}>
+            <span style={{ fontSize: 15, lineHeight: '20px' }}>📝</span>
+            <textarea
+              value={orderNote}
+              onChange={(e) => onOrderNote(e.target.value)}
+              placeholder="หมายเหตุ order เช่น ไม่ใส่น้ำแข็ง, แยกถุง..."
+              rows={1}
+              style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 13, color: 'var(--ink)', fontFamily: 'inherit', resize: 'none', lineHeight: '20px', maxHeight: 60 }}
+            />
+          </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <span style={{ fontSize: 14, color: 'var(--muted)' }}>ยอดรวมทั้งหมด</span>
             <span style={{ fontFamily: "'Itim',cursive", fontSize: 28, color: 'var(--ink)' }}>{money(total)}</span>
