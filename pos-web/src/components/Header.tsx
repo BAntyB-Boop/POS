@@ -50,7 +50,7 @@ export default function Header({ screen, productCount, now, onSetTheme, onToggle
           ☰
         </button>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: "'Itim',cursive", fontSize: 21, lineHeight: 1.1, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</div>
+          <div style={{ fontFamily: "'Chonburi',cursive", fontSize: 21, lineHeight: 1.1, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</div>
           <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</div>
         </div>
       </div>

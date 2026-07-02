@@ -72,13 +72,13 @@ export default function ProductsScreen({
               </div>
             </div>
             <div><span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--muted)', background: 'var(--bg)', padding: '4px 10px', borderRadius: 999 }}>{catName(p.cat)}</span></div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--brand)' }}>{money(p.price)}</div>
+            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 14, fontWeight: 700, color: 'var(--brand)' }}>{money(p.price)}</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: p.stock <= p.reorderLevel ? 'var(--danger)' : 'var(--ink)' }}>{p.stock}</div>
             <div style={{ display: 'flex', gap: 7, justifyContent: 'flex-end' }}>
               {isAdmin && (
                 <>
                   <button onClick={() => onEdit(p.id)} style={{ padding: '7px 12px', borderRadius: 9, border: '1.5px solid var(--line)', background: 'var(--panel)', color: 'var(--ink)', font: 'inherit', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>แก้ไข</button>
-                  <button onClick={() => onDelete(p.id)} style={{ padding: '7px 12px', borderRadius: 9, border: '1.5px solid #FADBD8', background: '#FDECEA', color: 'var(--danger)', font: 'inherit', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>ลบ</button>
+                  <button onClick={() => onDelete(p.id)} style={{ padding: '7px 12px', borderRadius: 9, border: '1.5px solid var(--danger)', background: 'var(--danger-soft)', color: 'var(--danger)', font: 'inherit', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>ลบ</button>
                 </>
               )}
             </div>

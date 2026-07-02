@@ -1,6 +1,7 @@
 import type { Screen, User } from '../types';
 import { ROLE_LABELS } from '../data';
 import { ShoppingCart, Package, BarChart3, LogOut } from 'lucide-react';
+import CatMark from './CatMark';
 
 
 interface Props {
@@ -32,11 +33,11 @@ export default function Sidebar({ storeName, screen, onNavigate, open, onClose, 
     <div className={'sidebar-backdrop' + (open ? ' show' : '')} onClick={onClose} />
     <aside className={'app-sidebar' + (open ? '' : ' closed')}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '4px 6px 18px' }}>
-        <div style={{ width: 44, height: 44, flex: 'none', borderRadius: 15, background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: "'Itim',cursive", fontSize: 22 }}>
-          {storeName.trim().charAt(0)}
+        <div style={{ width: 44, height: 44, flex: 'none', borderRadius: 15, background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <CatMark size={24} color="#fff" />
         </div>
         <div>
-          <div style={{ fontFamily: "'Itim',cursive", fontSize: 20, lineHeight: 1, color: 'var(--ink)' }}>{storeName}</div>
+          <div style={{ fontFamily: "'Chonburi',cursive", fontSize: 20, lineHeight: 1, color: 'var(--ink)' }}>{storeName}</div>
           <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>ระบบขายหน้าร้าน</div>
         </div>
       </div>
