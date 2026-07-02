@@ -4,6 +4,8 @@ interface Props {
   storeName: string;
   screen: Screen;
   onNavigate: (s: Screen) => void;
+  open: boolean;
+  onClose: () => void;
 }
 
 const navStyle = (active: boolean): React.CSSProperties => ({
@@ -13,9 +15,16 @@ const navStyle = (active: boolean): React.CSSProperties => ({
   color: active ? 'var(--brand)' : 'var(--muted)', font: 'inherit',
 });
 
-export default function Sidebar({ storeName, screen, onNavigate }: Props) {
+export default function Sidebar({ storeName, screen, onNavigate, open, onClose }: Props) {
+  const navigate = (s: Screen) => {
+    onNavigate(s);
+    // บนจอแคบ sidebar เป็น overlay — เลือกเมนูแล้วปิดให้เอง
+    if (window.innerWidth <= 1024) onClose();
+  };
   return (
-    <aside style={{ width: 238, flex: 'none', display: 'flex', flexDirection: 'column', background: 'var(--panel)', borderRight: '1px solid var(--line)', padding: '20px 16px', gap: 6, zIndex: 2 }}>
+    <>
+    <div className={'sidebar-backdrop' + (open ? ' show' : '')} onClick={onClose} />
+    <aside className={'app-sidebar' + (open ? '' : ' closed')}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '4px 6px 18px' }}>
         <div style={{ width: 44, height: 44, flex: 'none', borderRadius: 15, background: 'var(--soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'floaty 4s ease-in-out infinite' }}>
           <svg width="30" height="30" viewBox="0 0 40 40" fill="none">
@@ -34,9 +43,9 @@ export default function Sidebar({ storeName, screen, onNavigate }: Props) {
         </div>
       </div>
 
-      <button onClick={() => onNavigate('pos')} style={navStyle(screen === 'pos')}><span style={{ fontSize: 18 }}>🛒</span><span>ขายหน้าร้าน</span></button>
-      <button onClick={() => onNavigate('products')} style={navStyle(screen === 'products')}><span style={{ fontSize: 18 }}>📦</span><span>จัดการสินค้า</span></button>
-      <button onClick={() => onNavigate('reports')} style={navStyle(screen === 'reports')}><span style={{ fontSize: 18 }}>📊</span><span>รายงานยอดขาย</span></button>
+      <button onClick={() => navigate('pos')} style={navStyle(screen === 'pos')}><span style={{ fontSize: 18 }}>🛒</span><span>ขายหน้าร้าน</span></button>
+      <button onClick={() => navigate('products')} style={navStyle(screen === 'products')}><span style={{ fontSize: 18 }}>📦</span><span>จัดการสินค้า</span></button>
+      <button onClick={() => navigate('reports')} style={navStyle(screen === 'reports')}><span style={{ fontSize: 18 }}>📊</span><span>รายงานยอดขาย</span></button>
 
       <div style={{ flex: 1 }} />
 
@@ -48,5 +57,6 @@ export default function Sidebar({ storeName, screen, onNavigate }: Props) {
         </div>
       </div>
     </aside>
+    </>
   );
 }

@@ -24,7 +24,7 @@ export default function ProductsScreen({
   const catIcon = (id: string) => categories.find((c) => c.id === id)?.icon || '📦';
   const pq = pSearch.trim().toLowerCase();
   const chips = [{ id: 'all', name: 'ทั้งหมด', icon: '🐾' }, ...categories];
-  const list = products.filter((p) => (pCat === 'all' || p.cat === pCat) && (!pq || p.name.toLowerCase().includes(pq)));
+  const list = products.filter((p) => (pCat === 'all' || p.cat === pCat) && (!pq || p.name.toLowerCase().includes(pq) || p.description.toLowerCase().includes(pq)));
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', minHeight: 0 }}>
@@ -50,8 +50,9 @@ export default function ProductsScreen({
         </div>
       </div>
 
-      <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2.4fr 1fr 0.9fr 0.9fr 132px', gap: 12, alignItems: 'center', padding: '13px 18px', background: 'var(--bg)', fontSize: 12, fontWeight: 700, color: 'var(--muted)' }}>
+      <div className="table-scroll" style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18 }}>
+       <div>
+        <div style={{ display: 'grid', gridTemplateColumns: '2.4fr 1fr 0.9fr 0.9fr 132px', gap: 12, alignItems: 'center', padding: '13px 18px', background: 'var(--bg)', fontSize: 12, fontWeight: 700, color: 'var(--muted)', borderRadius: '16.5px 16.5px 0 0' }}>
           <div>สินค้า</div><div>หมวดหมู่</div><div>ราคา</div><div>คงเหลือ</div><div style={{ textAlign: 'right' }}>จัดการ</div>
         </div>
         {list.length === 0 && (
@@ -69,7 +70,12 @@ export default function ProductsScreen({
               ) : (
                 <div style={{ width: 42, height: 42, flex: 'none', borderRadius: 11, background: 'var(--soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{p.icon}</div>
               )}
-              <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                {p.description && (
+                  <div style={{ fontSize: 11.5, color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 1 }}>{p.description}</div>
+                )}
+              </div>
             </div>
             <div><span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--muted)', background: 'var(--bg)', padding: '4px 10px', borderRadius: 999 }}>{catIcon(p.cat)} {catName(p.cat)}</span></div>
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--brand)' }}>{money(p.price)}</div>
@@ -80,6 +86,7 @@ export default function ProductsScreen({
             </div>
           </div>
         ))}
+       </div>
       </div>
     </div>
   );

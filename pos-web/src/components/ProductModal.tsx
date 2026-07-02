@@ -53,6 +53,17 @@ export default function ProductModal({ isEditing, form, categories, onUpdate, on
           <input value={form.name} onChange={(e) => onUpdate('name', e.target.value)} placeholder="เช่น น้ำดื่มสิงห์" style={inputStyle} />
         </div>
 
+        <div style={{ marginBottom: 13 }}>
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>รายละเอียดสินค้า</div>
+          <textarea
+            value={form.description}
+            onChange={(e) => onUpdate('description', e.target.value)}
+            placeholder="เช่น ขวด 600 มล. เย็นชื่นใจ"
+            rows={2}
+            style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit', minHeight: 44 }}
+          />
+        </div>
+
         <div style={{ display: 'flex', gap: 12, marginBottom: 13 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>หมวดหมู่</div>

@@ -29,6 +29,11 @@ export default function ReceiptModal({ receipt, onClose }: Props) {
             </>
           )}
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--muted)', marginTop: 5 }}><span>ชำระโดย</span><span>{receipt.method === 'cash' ? 'เงินสด' : 'พร้อมเพย์'}</span></div>
+          {receipt.note && (
+            <div style={{ marginTop: 10, padding: '9px 12px', background: 'var(--soft)', borderRadius: 11, fontSize: 12.5, color: 'var(--ink)', textAlign: 'left' }}>
+              📝 {receipt.note}
+            </div>
+          )}
         </div>
         <button onClick={onClose} style={{ width: '100%', padding: 14, borderRadius: 15, border: 'none', background: 'var(--brand)', color: '#fff', font: 'inherit', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: 'var(--shadow)' }}>เริ่มบิลใหม่</button>
       </div>
