@@ -1,6 +1,7 @@
 import type { CartMap, Category, Product } from '../types';
 import { chipStyle } from '../styleHelpers';
 import { money } from '../theme';
+import Thumb from './Thumb';
 
 interface Props {
   categories: Category[];
@@ -33,26 +34,24 @@ export default function PosScreen({
   }, 0);
   const count = cartIds.reduce((s, id) => s + cart[id], 0);
 
-  const chips = [{ id: 'all', name: 'ทั้งหมด', icon: '🐾' }, ...categories];
+  const chips = [{ id: 'all', name: 'ทั้งหมด' }, ...categories];
 
   return (
     <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, padding: '18px 20px', gap: 15 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 16, padding: '11px 16px' }}>
-          <span style={{ fontSize: 18 }}>🔍</span>
           <input value={search} onChange={(e) => onSearch(e.target.value)} placeholder="ค้นหาสินค้า..." style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 15, color: 'var(--ink)' }} />
         </div>
         <div style={{ display: 'flex', gap: 9, overflowX: 'auto', paddingBottom: 2, flex: 'none' }}>
           {chips.map((c) => (
             <button key={c.id} onClick={() => onSelectCat(c.id)} style={chipStyle(activeCat === c.id)}>
-              <span>{c.icon}</span><span>{c.name}</span>
+              <span>{c.name}</span>
             </button>
           ))}
         </div>
         <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
           {filtered.length === 0 && (
             <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, color: 'var(--muted)' }}>
-              <div style={{ fontSize: 52 }}>🙀</div>
               <div style={{ fontSize: 15 }}>ไม่พบสินค้าที่ค้นหา</div>
             </div>
           )}
@@ -68,13 +67,7 @@ export default function PosScreen({
                   {p.stock <= lowStockThreshold && (
                     <div style={{ position: 'absolute', top: 9, right: 9, background: '#FDE4E0', color: 'var(--danger)', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999 }}>ใกล้หมด</div>
                   )}
-                  {p.img ? (
-                    <div style={{ width: 56, height: 56, borderRadius: 15, overflow: 'hidden', background: 'var(--soft)' }}>
-                      <img src={p.img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                  ) : (
-                    <div style={{ width: 56, height: 56, borderRadius: 15, background: 'var(--soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30 }}>{p.icon}</div>
-                  )}
+                  <Thumb name={p.name} img={p.img} size={56} radius={15} />
                   <div style={{ fontSize: 13.5, fontWeight: 600, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 35 }}>{p.name}</div>
                   <div style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 30 }}>{p.description}</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
@@ -91,7 +84,6 @@ export default function PosScreen({
       <aside className="cart-aside">
         <div style={{ padding: '18px 20px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-            <span style={{ fontSize: 20 }}>🛒</span>
             <span style={{ fontFamily: "'Itim',cursive", fontSize: 19 }}>ตะกร้า</span>
             <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand)', background: 'var(--soft)', padding: '2px 9px', borderRadius: 999 }}>{count} ชิ้น</span>
           </div>
@@ -99,8 +91,7 @@ export default function PosScreen({
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px', minHeight: 0 }}>
           {cartIds.length === 0 && (
-            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, color: 'var(--muted)', textAlign: 'center', padding: 20 }}>
-              <div style={{ fontSize: 56, animation: 'floaty 4s ease-in-out infinite' }}>😻</div>
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, color: 'var(--muted)', textAlign: 'center', padding: 20 }}>
               <div style={{ fontSize: 15, fontWeight: 600 }}>ยังไม่มีสินค้าในตะกร้า</div>
               <div style={{ fontSize: 12.5 }}>แตะสินค้าทางซ้ายเพื่อเพิ่มได้เลย</div>
             </div>
@@ -111,13 +102,7 @@ export default function PosScreen({
             const qty = cart[id];
             return (
               <div key={id} style={{ display: 'flex', gap: 11, alignItems: 'center', padding: 10, borderRadius: 14, background: 'var(--bg)', marginBottom: 9, animation: 'slidein .2s ease' }}>
-                {p.img ? (
-                  <div style={{ width: 42, height: 42, flex: 'none', borderRadius: 11, overflow: 'hidden', background: 'var(--soft)' }}>
-                    <img src={p.img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                ) : (
-                  <div style={{ width: 42, height: 42, flex: 'none', borderRadius: 11, background: 'var(--soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{p.icon}</div>
-                )}
+                <Thumb name={p.name} img={p.img} size={42} radius={11} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
                   <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 1 }}>{money(p.price)} /ชิ้น</div>
@@ -134,7 +119,6 @@ export default function PosScreen({
         </div>
         <div style={{ padding: '16px 20px', borderTop: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9, background: 'var(--bg)', border: '1.5px solid var(--line)', borderRadius: 13, padding: '10px 13px' }}>
-            <span style={{ fontSize: 15, lineHeight: '20px' }}>📝</span>
             <textarea
               value={orderNote}
               onChange={(e) => onOrderNote(e.target.value)}

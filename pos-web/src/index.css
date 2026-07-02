@@ -12,6 +12,23 @@ button, input, select { font-family: 'Noto Sans Thai', system-ui, sans-serif; }
 @keyframes toastin { from { transform: translate(-50%, 14px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 @keyframes slidein { from { transform: translateX(12px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes coverup { from { clip-path: circle(0% at 50% 58%); } to { clip-path: circle(142% at 50% 58%); } }
+@keyframes waterrise { from { transform: translateY(103%); } to { transform: translateY(0); } }
+@keyframes bubbleup {
+  0% { transform: translateY(0) scale(.9); opacity: 0; }
+  12% { opacity: var(--bubble-opacity, .55); }
+  100% { transform: translateY(-108vh) scale(1.35); opacity: 0; }
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 4px solid var(--soft);
+  border-top-color: var(--brand);
+  animation: spin .8s linear infinite;
+}
 
 .product-card:hover {
   border-color: var(--brand);

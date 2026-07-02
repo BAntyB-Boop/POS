@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import type { User } from './types';
+import LoginScreen from './components/LoginScreen';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import PosScreen from './components/PosScreen';
@@ -11,10 +13,31 @@ import CategoryModal from './components/CategoryModal';
 import Toast from './components/Toast';
 import { usePos, type PosOptions } from './usePos';
 
+const USER_KEY = 'meow-pos-user';
+
 function App(props: PosOptions) {
   const pos = usePos(props);
   // จอกว้างเปิด sidebar ไว้ก่อน จอแคบ (iPad แนวตั้ง/มือถือ) เริ่มแบบปิด
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1024);
+
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const raw = localStorage.getItem(USER_KEY);
+      return raw ? (JSON.parse(raw) as User) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleLogin = (u: User) => {
+    setUser(u);
+    localStorage.setItem(USER_KEY, JSON.stringify(u));
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem(USER_KEY);
+  };
 
   return (
     <div
@@ -27,12 +50,18 @@ function App(props: PosOptions) {
         background: 'var(--bg)', fontFamily: "'Noto Sans Thai',system-ui,sans-serif", color: 'var(--ink)',
       }}
     >
+      {!user ? (
+        <LoginScreen storeName={pos.storeName} onLogin={handleLogin} />
+      ) : (
+      <>
       <Sidebar
         storeName={pos.storeName}
         screen={pos.screen}
         onNavigate={pos.setScreen}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        user={user}
+        onLogout={handleLogout}
       />
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -133,6 +162,9 @@ function App(props: PosOptions) {
           onClose={pos.closeCat}
           onSave={pos.saveCat}
         />
+      )}
+
+      </>
       )}
 
       {pos.toastState && <Toast toast={pos.toastState} />}

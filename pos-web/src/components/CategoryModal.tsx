@@ -1,6 +1,4 @@
 import type { CategoryForm } from '../types';
-import { CAT_ICON_OPTIONS } from '../data';
-import { iconChipStyle } from '../styleHelpers';
 
 interface Props {
   catForm: CategoryForm;
@@ -22,17 +20,9 @@ export default function CategoryModal({ catForm, onUpdate, onClose, onSave }: Pr
           <input
             value={catForm.name}
             onChange={(e) => onUpdate({ ...catForm, name: e.target.value })}
-            placeholder="เช่น อาหารสัตว์"
-            style={{ width: '100%', padding: '12px 14px', border: '1.5px solid var(--line)', borderRadius: 12, outline: 'none', fontSize: 14, background: 'var(--bg)', color: 'var(--ink)' }}
+            placeholder="เช่น เครื่องเขียน"
+            style={{ width: '100%', padding: '12px 14px', border: '1.5px solid var(--line)', borderRadius: 12, outline: 'none', fontSize: 14, background: 'var(--bg)', color: 'var(--ink)', marginBottom: 8 }}
           />
-        </div>
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 7 }}>ไอคอน</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10,1fr)', gap: 6 }}>
-            {CAT_ICON_OPTIONS.map((em) => (
-              <button key={em} onClick={() => onUpdate({ ...catForm, icon: em })} style={iconChipStyle(catForm.icon === em)}>{em}</button>
-            ))}
-          </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={onClose} style={{ flex: 1, padding: 13, borderRadius: 14, border: '1.5px solid var(--line)', background: 'var(--panel)', color: 'var(--muted)', font: 'inherit', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>ยกเลิก</button>

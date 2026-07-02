@@ -4,6 +4,7 @@ import { tabStyle } from '../styleHelpers';
 import { money } from '../theme';
 import BillModal from './BillModal';
 import DayDetailModal from './DayDetailModal';
+import Thumb from './Thumb';
 
 interface Props {
   categories: Category[];
@@ -46,9 +47,9 @@ export default function ReportsScreen({
   const dvals = dayKeys.map((k) => dayAgg[k]);
   const dmax = dvals.length ? Math.max(...dvals) : 1;
 
-  const agg: Record<string, { name: string; icon: string; qty: number; rev: number }> = {};
+  const agg: Record<string, { name: string; qty: number; rev: number }> = {};
   periodSales.forEach((x) => x.items.forEach((i) => {
-    if (!agg[i.name]) agg[i.name] = { name: i.name, icon: i.icon, qty: 0, rev: 0 };
+    if (!agg[i.name]) agg[i.name] = { name: i.name, qty: 0, rev: 0 };
     agg[i.name].qty += i.qty;
     agg[i.name].rev += i.lineTotal;
   }));
@@ -86,24 +87,24 @@ export default function ReportsScreen({
         {isMonth && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
             <button onClick={onPrevMonth} style={{ width: 38, height: 38, flex: 'none', borderRadius: 11, border: '1.5px solid var(--line)', background: 'var(--panel)', color: 'var(--ink)', fontSize: 14, cursor: 'pointer' }}>◀</button>
-            <span style={{ fontFamily: "'Itim',cursive", fontSize: 18, minWidth: 158, textAlign: 'center' }}>📅 {selMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</span>
+            <span style={{ fontFamily: "'Itim',cursive", fontSize: 18, minWidth: 158, textAlign: 'center' }}>{selMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</span>
             <button onClick={onNextMonth} disabled={nextDisabled} style={{ width: 38, height: 38, flex: 'none', borderRadius: 11, border: '1.5px solid var(--line)', background: 'var(--panel)', fontSize: 14, color: nextDisabled ? '#d9cfc9' : 'var(--ink)', cursor: nextDisabled ? 'not-allowed' : 'pointer' }}>▶</button>
           </div>
         )}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14 }}>
-        <StatCard label={isMonth ? 'ยอดขายรวมเดือน' : 'ยอดขายวันนี้'} icon="💰" value={money(todayTotal)} accent />
-        <StatCard label="จำนวนบิล" icon="🧾" value={String(bills)} />
-        <StatCard label="ชิ้นที่ขายได้" icon="📦" value={String(itemsSold)} />
-        <StatCard label="เฉลี่ยต่อบิล" icon="📈" value={money(avg)} />
+        <StatCard label={isMonth ? 'ยอดขายรวมเดือน' : 'ยอดขายวันนี้'} value={money(todayTotal)} accent />
+        <StatCard label="จำนวนบิล" value={String(bills)} />
+        <StatCard label="ชิ้นที่ขายได้" value={String(itemsSold)} />
+        <StatCard label="เฉลี่ยต่อบิล" value={money(avg)} />
       </div>
 
       {isMonth && (
         <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
-          <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>📈 ยอดขายรายวัน · {selMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</div>
-          {dayKeys.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>ยังไม่มียอดขายในเดือนนี้ ลองขายสักบิลดูนะ 🐱</div>}
-          {dayKeys.length > 0 && <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>💡 แตะวันที่เพื่อดูรายละเอียดของวันนั้น</div>}
+          <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>ยอดขายรายวัน · {selMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</div>
+          {dayKeys.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>ยังไม่มียอดขายในเดือนนี้ ลองขายสักรายการดูนะ</div>}
+          {dayKeys.length > 0 && <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>แตะวันที่เพื่อดูรายละเอียดของวันนั้น</div>}
           {dayKeys.map((k) => (
             <button
               key={k}
@@ -125,12 +126,12 @@ export default function ReportsScreen({
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 16 }}>
         <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
-          <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>🏆 สินค้าขายดี</div>
-          {topArr.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>ยังไม่มีข้อมูลการขาย ลองขายสักบิลดูนะ 🐱</div>}
+          <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>สินค้าขายดี</div>
+          {topArr.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>ยังไม่มีข้อมูลการขาย ลองขายสักรายการดูนะ</div>}
           {topArr.map((t) => (
             <div key={t.name} style={{ marginBottom: 13 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 13.5, fontWeight: 600 }}>{t.icon} {t.name}</span>
+                <span style={{ fontSize: 13.5, fontWeight: 600 }}>{t.name}</span>
                 <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>{t.qty} ชิ้น · {money(t.rev)}</span>
               </div>
               <div style={{ background: 'var(--bg)', borderRadius: 999 }}>
@@ -141,17 +142,11 @@ export default function ReportsScreen({
         </div>
 
         <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
-          <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>🐈 สินค้าใกล้หมด</div>
-          {lowStock.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>สต็อกยังเพียงพอทุกรายการ 👍</div>}
+          <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>สินค้าใกล้หมด</div>
+          {lowStock.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>สต็อกยังเพียงพอทุกรายการ</div>}
           {lowStock.map((p) => (
             <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
-              {p.img ? (
-                <div style={{ width: 34, height: 34, flex: 'none', borderRadius: 9, overflow: 'hidden', background: 'var(--soft)' }}>
-                  <img src={p.img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-              ) : (
-                <div style={{ width: 34, height: 34, flex: 'none', borderRadius: 9, background: 'var(--soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{p.icon}</div>
-              )}
+              <Thumb name={p.name} img={p.img} size={34} radius={9} />
               <span style={{ flex: 1, fontSize: 13.5, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
               <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 999, whiteSpace: 'nowrap', color: p.stock <= 2 ? 'var(--danger)' : 'var(--warn)', background: p.stock <= 2 ? '#FDECEA' : '#FFF3E0' }}>{p.stock} ชิ้น</span>
             </div>
@@ -159,12 +154,12 @@ export default function ReportsScreen({
         </div>
 
         <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
-          <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>🗂️ ยอดขายตามหมวดหมู่</div>
+          <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>ยอดขายตามหมวดหมู่</div>
           {catBreakdown.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>ยังไม่มีข้อมูล</div>}
           {catBreakdown.map((c) => (
             <div key={c.id} style={{ marginBottom: 13 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 13.5, fontWeight: 600 }}>{c.icon} {c.name}</span>
+                <span style={{ fontSize: 13.5, fontWeight: 600 }}>{c.name}</span>
                 <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>{money(cagg[c.id])}</span>
               </div>
               <div style={{ background: 'var(--bg)', borderRadius: 999 }}>
@@ -176,7 +171,7 @@ export default function ReportsScreen({
 
         <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
-            <div style={{ fontFamily: "'Itim',cursive", fontSize: 18 }}>🧾 {bq ? 'ผลค้นหาบิล' : 'บิลล่าสุด'}</div>
+            <div style={{ fontFamily: "'Itim',cursive", fontSize: 18 }}>{bq ? 'ผลค้นหาบิล' : 'บิลล่าสุด'}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'var(--bg)', border: '1.5px solid var(--line)', borderRadius: 11, padding: '7px 12px', width: 190 }}>
               <span style={{ fontSize: 13 }}>🔍</span>
               <input
@@ -190,7 +185,7 @@ export default function ReportsScreen({
               )}
             </div>
           </div>
-          {recent.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>{bq ? 'ไม่พบบิลที่ค้นหา 🙀' : 'ยังไม่มีบิลวันนี้'}</div>}
+          {recent.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>{bq ? 'ไม่พบบิลที่ค้นหา' : 'ยังไม่มีบิลวันนี้'}</div>}
           {recent.map((r) => (
             <button
               key={r.no}
@@ -228,12 +223,10 @@ export default function ReportsScreen({
   );
 }
 
-function StatCard({ label, icon, value, accent }: { label: string; icon: string; value: string; accent?: boolean }) {
+function StatCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: 18 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <span style={{ fontSize: 13, color: 'var(--muted)' }}>{label}</span><span style={{ fontSize: 22 }}>{icon}</span>
-      </div>
+      <div style={{ fontSize: 13, color: 'var(--muted)' }}>{label}</div>
       <div style={{ fontFamily: "'Itim',cursive", fontSize: 30, color: accent ? 'var(--brand)' : 'var(--ink)', marginTop: 6 }}>{value}</div>
     </div>
   );

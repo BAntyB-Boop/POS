@@ -17,7 +17,7 @@ export default function DayDetailModal({ date, bills, onClose, onSelectBill }: P
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(58,46,42,.45)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 70, padding: 20, animation: 'fade .18s ease' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 460, maxWidth: '100%', maxHeight: '88vh', display: 'flex', flexDirection: 'column', background: 'var(--panel)', borderRadius: 24, padding: 24, animation: 'pop .22s ease', boxShadow: '0 30px 70px rgba(0,0,0,.3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <span style={{ fontFamily: "'Itim',cursive", fontSize: 21 }}>📅 {date.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+          <span style={{ fontFamily: "'Itim',cursive", fontSize: 21 }}>{date.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
           <button onClick={onClose} style={{ width: 32, height: 32, border: 'none', borderRadius: '50%', background: 'var(--bg)', cursor: 'pointer', fontSize: 16, color: 'var(--muted)' }}>✕</button>
         </div>
         <div style={{ fontSize: 12.5, color: 'var(--muted)', marginBottom: 14 }}>รายละเอียดการขายของวันนี้</div>
@@ -40,7 +40,7 @@ export default function DayDetailModal({ date, bills, onClose, onSelectBill }: P
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--muted)', marginBottom: 8 }}>บิลทั้งหมด ({bills.length}) · {itemsSold} ชิ้น — แตะบิลเพื่อดูรายละเอียด</div>
         <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
           {bills.length === 0 && (
-            <div style={{ color: 'var(--muted)', fontSize: 13, padding: '20px 0', textAlign: 'center' }}>ไม่มีบิลในวันนี้ 🐾</div>
+            <div style={{ color: 'var(--muted)', fontSize: 13, padding: '20px 0', textAlign: 'center' }}>ไม่มีบิลในวันนี้</div>
           )}
           {bills.slice().reverse().map((b) => (
             <button
