@@ -1,6 +1,8 @@
 import type { Category, Product, Sale, User, ProductForm, CategoryForm } from './types';
 
-const BASE_URL = 'http://localhost:3000/api';
+// ตั้ง VITE_API_URL เป็น origin ของ backend (ไม่ต้องมี /api ต่อท้าย) เช่น https://xxx.up.railway.app
+const API_ORIGIN = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const BASE_URL = `${API_ORIGIN}/api`;
 const TOKEN_KEY = 'meow-pos-token';
 
 function getHeaders(): HeadersInit {
@@ -228,16 +230,25 @@ export const api = {
 
   async getRecentOrders(limit: number = 6): Promise<any[]> {
     const data = await request<any[]>(`/reports/recent-orders?limit=${limit}`);
-    return data.map((d) => ({
-      no: d.id,
-      ts: typeof d.created_at === 'number' ? d.created_at : new Date(d.created_at).getTime(),
-      total: d.total_amount / 100,
-      method: d.payment_method === 'cash' ? 'cash' : 'qr',
-      received: d.received_amount / 100,
-      change: d.change_amount / 100,
-      note: d.description || '',
-      itemsCount: d.items_count,
-      cashierName: d.cashier_name,
-    }));
+    return data.map(mapOrderSummaryFromDb);
+  },
+
+  async getOrdersRange(from: string, to: string, limit: number = 200): Promise<any[]> {
+    const data = await request<{ items: any[] }>(`/orders?from=${from}&to=${to}&limit=${limit}`);
+    return (data.items || []).map(mapOrderSummaryFromDb);
   },
 };
+
+function mapOrderSummaryFromDb(d: any) {
+  return {
+    no: d.id,
+    ts: typeof d.created_at === 'number' ? d.created_at : new Date(d.created_at).getTime(),
+    total: d.total_amount / 100,
+    method: d.payment_method === 'cash' ? 'cash' : 'qr',
+    received: d.received_amount / 100,
+    change: d.change_amount / 100,
+    note: d.description || '',
+    itemsCount: d.items_count,
+    cashierName: d.cashier_name,
+  };
+}

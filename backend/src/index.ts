@@ -23,7 +23,7 @@ const api = new Elysia({ prefix: '/api' })
 
 export const app = new Elysia()
   .use(errorPlugin)
-  .use(cors({ origin: 'http://localhost:5173' }))
+  .use(cors({ origin: env.CORS_ORIGINS }))
   .use(swagger({ path: '/swagger' }))
   .use(api);
 

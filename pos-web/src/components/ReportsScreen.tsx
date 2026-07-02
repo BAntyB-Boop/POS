@@ -108,27 +108,8 @@ export default function ReportsScreen({
         const fromYmd = toYmd(fromDate);
         const toYmdStr = toYmd(toDate);
 
-        const url = `http://localhost:3000/api/orders?from=${fromYmd}&to=${toYmdStr}&limit=200`;
-        const res = await fetch(url, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('meow-pos-token')}`
-          }
-        });
-        const data = await res.json();
-        if (active && data.items) {
-          const mapped = data.items.map((d: any) => ({
-            no: d.id,
-            ts: typeof d.created_at === 'number' ? d.created_at : new Date(d.created_at).getTime(),
-            total: d.total_amount / 100,
-            method: d.payment_method === 'cash' ? 'cash' : 'qr',
-            received: d.received_amount / 100,
-            change: d.change_amount / 100,
-            note: d.description || '',
-            itemsCount: d.items_count,
-            cashierName: d.cashier_name,
-          }));
-          setDayBills(mapped);
-        }
+        const mapped = await api.getOrdersRange(fromYmd, toYmdStr, 200);
+        if (active) setDayBills(mapped);
       } catch (err) {
         console.error(err);
       }
