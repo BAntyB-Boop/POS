@@ -10,7 +10,6 @@ interface Props {
   onPSearch: (v: string) => void;
   pCat: string;
   onSelectPCat: (id: string) => void;
-  lowStockThreshold: number;
   isAdmin: boolean;
   onOpenCat: () => void;
   onOpenAdd: () => void;
@@ -19,7 +18,7 @@ interface Props {
 }
 
 export default function ProductsScreen({
-  categories, products, pSearch, onPSearch, pCat, onSelectPCat, lowStockThreshold, isAdmin,
+  categories, products, pSearch, onPSearch, pCat, onSelectPCat, isAdmin,
   onOpenCat, onOpenAdd, onEdit, onDelete,
 }: Props) {
   const catName = (id: string) => categories.find((c) => c.id === id)?.name || 'อื่นๆ';
@@ -74,7 +73,7 @@ export default function ProductsScreen({
             </div>
             <div><span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--muted)', background: 'var(--bg)', padding: '4px 10px', borderRadius: 999 }}>{catName(p.cat)}</span></div>
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--brand)' }}>{money(p.price)}</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: p.stock <= lowStockThreshold ? 'var(--danger)' : 'var(--ink)' }}>{p.stock}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: p.stock <= p.reorderLevel ? 'var(--danger)' : 'var(--ink)' }}>{p.stock}</div>
             <div style={{ display: 'flex', gap: 7, justifyContent: 'flex-end' }}>
               {isAdmin && (
                 <>

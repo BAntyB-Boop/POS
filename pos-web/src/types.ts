@@ -6,7 +6,7 @@ export interface User {
   name: string;
   role: UserRole;
 }
-export type ThemeName = 'peach' | 'mint' | 'grape';
+export type ThemeName = 'morning' | 'shade' | 'lamp';
 export type PayMethod = 'cash' | 'qr';
 export type ReportPeriod = 'day' | 'month';
 
@@ -24,6 +24,7 @@ export interface Product {
   cost: number;
   cat: string;
   stock: number;
+  reorderLevel: number;
   icon: string;
   img: string | null;
   barcode: string;

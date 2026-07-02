@@ -6,6 +6,7 @@ import BillModal from './BillModal';
 import DayDetailModal from './DayDetailModal';
 import { api } from '../api';
 import Thumb from './Thumb';
+import { TrendingUp, Receipt, ShoppingBag, BarChart3, Crown, AlertTriangle, PieChart, History, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 
 interface Props {
   categories: Category[];
@@ -16,7 +17,6 @@ interface Props {
   monthOffset: number;
   onPrevMonth: () => void;
   onNextMonth: () => void;
-  lowStockThreshold: number;
 }
 
 function toYmd(d: Date): string {
@@ -27,7 +27,7 @@ function toYmd(d: Date): string {
 }
 
 export default function ReportsScreen({
-  categories, products, now, reportPeriod, onSetPeriod, monthOffset, onPrevMonth, onNextMonth, lowStockThreshold,
+  categories, products, now, reportPeriod, onSetPeriod, monthOffset, onPrevMonth, onNextMonth,
 }: Props) {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedBill, setSelectedBill] = useState<Sale | null>(null);
@@ -171,7 +171,7 @@ export default function ReportsScreen({
       }).slice(0, 10)
     : recentOrders.slice(0, 6);
 
-  const lowStock = products.filter((p) => p.stock <= lowStockThreshold).sort((a, b) => a.stock - b.stock).slice(0, 8);
+  const lowStock = products.filter((p) => p.stock <= p.reorderLevel).sort((a, b) => a.stock - b.stock).slice(0, 8);
 
   const nextDisabled = monthOffset >= 0;
 
@@ -192,18 +192,18 @@ export default function ReportsScreen({
         </div>
         {isMonth && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-            <button onClick={onPrevMonth} style={{ width: 38, height: 38, flex: 'none', borderRadius: 11, border: '1.5px solid var(--line)', background: 'var(--panel)', color: 'var(--ink)', fontSize: 14, cursor: 'pointer' }}>◀</button>
+            <button onClick={onPrevMonth} style={{ width: 38, height: 38, flex: 'none', borderRadius: 11, border: '1.5px solid var(--line)', background: 'var(--panel)', color: 'var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><ChevronLeft size={16} /></button>
             <span style={{ fontFamily: "'Itim',cursive", fontSize: 18, minWidth: 158, textAlign: 'center' }}>{selMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</span>
-            <button onClick={onNextMonth} disabled={nextDisabled} style={{ width: 38, height: 38, flex: 'none', borderRadius: 11, border: '1.5px solid var(--line)', background: 'var(--panel)', fontSize: 14, color: nextDisabled ? '#d9cfc9' : 'var(--ink)', cursor: nextDisabled ? 'not-allowed' : 'pointer' }}>▶</button>
+            <button onClick={onNextMonth} disabled={nextDisabled} style={{ width: 38, height: 38, flex: 'none', borderRadius: 11, border: '1.5px solid var(--line)', background: 'var(--panel)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: nextDisabled ? '#d9cfc9' : 'var(--ink)', cursor: nextDisabled ? 'not-allowed' : 'pointer' }}><ChevronRight size={16} /></button>
           </div>
         )}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14 }}>
-        <StatCard label={isMonth ? 'ยอดขายรวมเดือน' : 'ยอดขายวันนี้'} value={money(todayTotal)} accent />
-        <StatCard label="จำนวนบิล" value={String(bills)} />
-        <StatCard label="ชิ้นที่ขายได้" value={String(itemsSold)} />
-        <StatCard label="เฉลี่ยต่อบิล" value={money(avg)} />
+        <StatCard label={isMonth ? 'ยอดขายรวมเดือน' : 'ยอดขายวันนี้'} value={money(todayTotal)} accent icon={<TrendingUp size={22} />} />
+        <StatCard label="จำนวนบิล" value={String(bills)} icon={<Receipt size={22} />} />
+        <StatCard label="ชิ้นที่ขายได้" value={String(itemsSold)} icon={<ShoppingBag size={22} />} />
+        <StatCard label="เฉลี่ยต่อบิล" value={money(avg)} icon={<BarChart3 size={22} />} />
       </div>
 
       {isMonth && (
@@ -232,7 +232,7 @@ export default function ReportsScreen({
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 16 }}>
         <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
-          <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>สินค้าขายดี</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}><Crown size={18} style={{ color: 'var(--brand)' }} /><span style={{ fontFamily: "'Itim',cursive", fontSize: 18 }}>สินค้าขายดี</span></div>
           {topArr.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>ยังไม่มีข้อมูลการขาย ลองขายสักรายการดูนะ</div>}
           {topArr.map((t) => (
             <div key={t.name} style={{ marginBottom: 13 }}>
@@ -248,7 +248,7 @@ export default function ReportsScreen({
         </div>
 
         <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
-          <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>สินค้าใกล้หมด</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}><AlertTriangle size={18} style={{ color: 'var(--danger)' }} /><span style={{ fontFamily: "'Itim',cursive", fontSize: 18 }}>สินค้าใกล้หมด</span></div>
           {lowStock.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>สต็อกยังเพียงพอทุกรายการ</div>}
           {lowStock.map((p) => (
             <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
@@ -260,7 +260,7 @@ export default function ReportsScreen({
         </div>
 
         <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
-          <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>ยอดขายตามหมวดหมู่</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}><PieChart size={18} style={{ color: 'var(--brand2)' }} /><span style={{ fontFamily: "'Itim',cursive", fontSize: 18 }}>ยอดขายตามหมวดหมู่</span></div>
           {catBreakdown.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>ยังไม่มีข้อมูล</div>}
           {catBreakdown.map((c) => (
             <div key={c.id} style={{ marginBottom: 13 }}>
@@ -277,9 +277,9 @@ export default function ReportsScreen({
 
         <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
-            <div style={{ fontFamily: "'Itim',cursive", fontSize: 18 }}>{bq ? 'ผลค้นหาบิล' : 'บิลล่าสุด'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><History size={18} style={{ color: 'var(--muted)' }} /><span style={{ fontFamily: "'Itim',cursive", fontSize: 18 }}>{bq ? 'ผลค้นหาบิล' : 'บิลล่าสุด'}</span></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'var(--bg)', border: '1.5px solid var(--line)', borderRadius: 11, padding: '7px 12px', width: 190 }}>
-              <span style={{ fontSize: 13 }}>🔍</span>
+              <Search size={14} style={{ color: 'var(--muted)' }} />
               <input
                 value={billSearch}
                 onChange={(e) => setBillSearch(e.target.value)}
@@ -329,11 +329,14 @@ export default function ReportsScreen({
   );
 }
 
-function StatCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function StatCard({ label, value, accent, icon }: { label: string; value: string; accent?: boolean; icon?: React.ReactNode }) {
   return (
-    <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: 18 }}>
-      <div style={{ fontSize: 13, color: 'var(--muted)' }}>{label}</div>
-      <div style={{ fontFamily: "'Itim',cursive", fontSize: 30, color: accent ? 'var(--brand)' : 'var(--ink)', marginTop: 6 }}>{value}</div>
+    <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div>
+        <div style={{ fontSize: 12.5, color: 'var(--muted)' }}>{label}</div>
+        <div style={{ fontFamily: "'Itim',cursive", fontSize: 30, color: accent ? 'var(--brand)' : 'var(--ink)', marginTop: 6, lineHeight: 1.1 }}>{value}</div>
+      </div>
+      {icon && <div style={{ color: accent ? 'var(--brand)' : 'var(--muted)', background: 'var(--bg)', width: 44, height: 44, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{icon}</div>}
     </div>
   );
 }

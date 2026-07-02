@@ -14,10 +14,10 @@ export default function DayDetailModal({ date, bills, onClose, onSelectBill }: P
   const avg = bills.length ? Math.round(total / bills.length) : 0;
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(58,46,42,.45)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 70, padding: 20, animation: 'fade .18s ease' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(42,33,24,.45)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 70, padding: 20, animation: 'fade .18s ease' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 460, maxWidth: '100%', maxHeight: '88vh', display: 'flex', flexDirection: 'column', background: 'var(--panel)', borderRadius: 24, padding: 24, animation: 'pop .22s ease', boxShadow: '0 30px 70px rgba(0,0,0,.3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <span style={{ fontFamily: "'Itim',cursive", fontSize: 21 }}>{date.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+          <span style={{ fontFamily: "'Chonburi',cursive", fontSize: 19 }}>{date.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
           <button onClick={onClose} style={{ width: 32, height: 32, border: 'none', borderRadius: '50%', background: 'var(--bg)', cursor: 'pointer', fontSize: 16, color: 'var(--muted)' }}>✕</button>
         </div>
         <div style={{ fontSize: 12.5, color: 'var(--muted)', marginBottom: 14 }}>รายละเอียดการขายของวันนี้</div>
@@ -25,15 +25,15 @@ export default function DayDetailModal({ date, bills, onClose, onSelectBill }: P
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
           <div style={{ background: 'var(--soft)', borderRadius: 14, padding: '12px 14px' }}>
             <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>ยอดขาย</div>
-            <div style={{ fontFamily: "'Itim',cursive", fontSize: 21, color: 'var(--brand)' }}>{money(total)}</div>
+            <div style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: 18, color: 'var(--brand)' }}>{money(total)}</div>
           </div>
           <div style={{ background: 'var(--bg)', borderRadius: 14, padding: '12px 14px' }}>
             <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>จำนวนบิล</div>
-            <div style={{ fontFamily: "'Itim',cursive", fontSize: 21, color: 'var(--ink)' }}>{bills.length}</div>
+            <div style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: 18, color: 'var(--ink)' }}>{bills.length}</div>
           </div>
           <div style={{ background: 'var(--bg)', borderRadius: 14, padding: '12px 14px' }}>
             <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>เฉลี่ย/บิล</div>
-            <div style={{ fontFamily: "'Itim',cursive", fontSize: 21, color: 'var(--ink)' }}>{money(avg)}</div>
+            <div style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: 18, color: 'var(--ink)' }}>{money(avg)}</div>
           </div>
         </div>
 

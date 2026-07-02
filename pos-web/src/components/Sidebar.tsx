@@ -1,5 +1,7 @@
 import type { Screen, User } from '../types';
 import { ROLE_LABELS } from '../data';
+import { ShoppingCart, Package, BarChart3, LogOut } from 'lucide-react';
+
 
 interface Props {
   storeName: string;
@@ -9,6 +11,7 @@ interface Props {
   onClose: () => void;
   user: User;
   onLogout: () => void;
+  lowStockCount: number;
 }
 
 const navStyle = (active: boolean): React.CSSProperties => ({
@@ -18,7 +21,7 @@ const navStyle = (active: boolean): React.CSSProperties => ({
   color: active ? 'var(--brand)' : 'var(--muted)', font: 'inherit',
 });
 
-export default function Sidebar({ storeName, screen, onNavigate, open, onClose, user, onLogout }: Props) {
+export default function Sidebar({ storeName, screen, onNavigate, open, onClose, user, onLogout, lowStockCount }: Props) {
   const navigate = (s: Screen) => {
     onNavigate(s);
     // บนจอแคบ sidebar เป็น overlay — เลือกเมนูแล้วปิดให้เอง
@@ -38,9 +41,21 @@ export default function Sidebar({ storeName, screen, onNavigate, open, onClose, 
         </div>
       </div>
 
-      <button onClick={() => navigate('pos')} style={navStyle(screen === 'pos')}><span>ขายหน้าร้าน</span></button>
-      <button onClick={() => navigate('products')} style={navStyle(screen === 'products')}><span>จัดการสินค้า</span></button>
-      <button onClick={() => navigate('reports')} style={navStyle(screen === 'reports')}><span>รายงานยอดขาย</span></button>
+      <button onClick={() => navigate('pos')} style={navStyle(screen === 'pos')}>
+        <ShoppingCart size={18} />
+        <span>ขายหน้าร้าน</span>
+      </button>
+      <button onClick={() => navigate('products')} style={navStyle(screen === 'products')}>
+        <Package size={18} />
+        <span style={{ flex: 1 }}>จัดการสินค้า</span>
+        {lowStockCount > 0 && (
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: 'var(--danger)', borderRadius: 999, padding: '2px 8px', flex: 'none' }}>{lowStockCount}</span>
+        )}
+      </button>
+      <button onClick={() => navigate('reports')} style={navStyle(screen === 'reports')}>
+        <BarChart3 size={18} />
+        <span>รายงานยอดขาย</span>
+      </button>
 
       <div style={{ flex: 1 }} />
 
@@ -55,9 +70,9 @@ export default function Sidebar({ storeName, screen, onNavigate, open, onClose, 
         <button
           onClick={onLogout}
           title="ออกจากระบบ"
-          style={{ flex: 'none', border: '1px solid var(--line)', borderRadius: 10, background: 'var(--panel)', cursor: 'pointer', fontSize: 11.5, fontWeight: 600, padding: '7px 10px', color: 'var(--muted)' }}
+          style={{ flex: 'none', border: '1px solid var(--line)', borderRadius: 10, background: 'var(--panel)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', color: 'var(--muted)', transition: '.15s' }}
         >
-          ออก
+          <LogOut size={16} />
         </button>
       </div>
     </aside>

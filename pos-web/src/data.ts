@@ -27,7 +27,7 @@ export const CATEGORIES: Category[] = [
 let seq = 0;
 function P(name: string, price: number, cat: string, stock: number, icon: string, description = ''): Product {
   seq += 1;
-  return { id: 'p' + seq, name, description, price, cost: Math.round(price * 0.72), cat, stock, icon, img: null, barcode: '' };
+  return { id: 'p' + seq, name, description, price, cost: Math.round(price * 0.72), cat, stock, reorderLevel: 5, icon, img: null, barcode: '' };
 }
 
 export function makeInitialProducts(): Product[] {

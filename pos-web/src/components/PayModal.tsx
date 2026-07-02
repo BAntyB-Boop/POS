@@ -19,15 +19,15 @@ export default function PayModal({ total, payMethod, onSetMethod, cashReceived, 
   const canConfirm = payMethod === 'qr' || cashNum >= total;
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(58,46,42,.45)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60, padding: 20, animation: 'fade .18s ease' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(42,33,24,.45)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60, padding: 20, animation: 'fade .18s ease' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 420, maxWidth: '100%', background: 'var(--panel)', borderRadius: 24, padding: 24, animation: 'pop .22s ease', boxShadow: '0 30px 70px rgba(0,0,0,.3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <span style={{ fontFamily: "'Itim',cursive", fontSize: 22 }}>ชำระเงิน</span>
+          <span style={{ fontFamily: "'Chonburi',cursive", fontSize: 22 }}>ชำระเงิน</span>
           <button onClick={onClose} style={{ width: 32, height: 32, border: 'none', borderRadius: '50%', background: 'var(--bg)', cursor: 'pointer', fontSize: 16, color: 'var(--muted)' }}>✕</button>
         </div>
         <div style={{ textAlign: 'center', padding: '16px 0 20px' }}>
           <div style={{ fontSize: 13, color: 'var(--muted)' }}>ยอดที่ต้องชำระ</div>
-          <div style={{ fontFamily: "'Itim',cursive", fontSize: 42, color: 'var(--brand)', lineHeight: 1.1 }}>{money(total)}</div>
+          <div style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: 40, color: 'var(--brand)', lineHeight: 1.1 }}>{money(total)}</div>
         </div>
         <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
           <button onClick={() => onSetMethod('cash')} style={tabStyle(payMethod === 'cash')}>เงินสด</button>
@@ -37,7 +37,7 @@ export default function PayModal({ total, payMethod, onSetMethod, cashReceived, 
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--bg)', borderRadius: 14, padding: '13px 16px', marginBottom: 12 }}>
               <span style={{ fontSize: 14, color: 'var(--muted)', whiteSpace: 'nowrap' }}>รับเงินมา</span>
-              <input value={cashReceived} onChange={(e) => onSetCash(e.target.value)} inputMode="decimal" placeholder="0" style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', textAlign: 'right', fontFamily: "'Itim',cursive", fontSize: 24, color: 'var(--ink)' }} />
+              <input value={cashReceived} onChange={(e) => onSetCash(e.target.value)} inputMode="decimal" placeholder="0" style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', textAlign: 'right', fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: 22, color: 'var(--ink)' }} />
               <span style={{ fontSize: 16, color: 'var(--muted)' }}>฿</span>
             </div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
@@ -48,7 +48,7 @@ export default function PayModal({ total, payMethod, onSetMethod, cashReceived, 
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--soft)', borderRadius: 14, marginBottom: 18 }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>เงินทอน</span>
-              <span style={{ fontFamily: "'Itim',cursive", fontSize: 24, color: 'var(--brand)' }}>{money(change)}</span>
+              <span style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: 22, color: 'var(--brand)' }}>{money(change)}</span>
             </div>
           </>
         )}
@@ -61,7 +61,7 @@ export default function PayModal({ total, payMethod, onSetMethod, cashReceived, 
         <button
           onClick={onConfirm}
           disabled={!canConfirm}
-          style={{ width: '100%', padding: 15, borderRadius: 15, border: 'none', cursor: canConfirm ? 'pointer' : 'not-allowed', fontSize: 16, fontWeight: 800, color: '#fff', background: canConfirm ? 'var(--brand)' : '#d9cfc9', boxShadow: canConfirm ? 'var(--shadow)' : 'none', font: 'inherit' }}
+          style={{ width: '100%', padding: 15, borderRadius: 15, border: 'none', cursor: canConfirm ? 'pointer' : 'not-allowed', fontSize: 16, fontWeight: 800, color: '#fff', background: canConfirm ? 'var(--brand)' : 'var(--disabled)', boxShadow: canConfirm ? 'var(--shadow)' : 'none', font: 'inherit' }}
         >
           ยืนยันการชำระเงิน
         </button>

@@ -16,14 +16,14 @@ interface Props {
 
 export default function ProductModal({ isEditing, form, categories, errors, onUpdate, onImg, onGenBarcode, onClose, onSave }: Props) {
   const fieldStyle = (k: keyof typeof errors): React.CSSProperties =>
-    errors[k] ? { ...inputStyle, border: '1.5px solid var(--danger)', background: '#FDECEA' } : inputStyle;
+    errors[k] ? { ...inputStyle, border: '1.5px solid var(--danger)', background: 'var(--danger-soft)' } : inputStyle;
   const labelStyle = (k: keyof typeof errors): React.CSSProperties =>
     ({ fontSize: 12, color: errors[k] ? 'var(--danger)' : 'var(--muted)', fontWeight: errors[k] ? 700 : 400, marginBottom: 6 });
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(58,46,42,.45)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60, padding: 20, animation: 'fade .18s ease', overflow: 'auto' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(42,33,24,.45)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60, padding: 20, animation: 'fade .18s ease', overflow: 'auto' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 480, maxWidth: '100%', background: 'var(--panel)', borderRadius: 24, padding: 24, animation: 'pop .22s ease', boxShadow: '0 30px 70px rgba(0,0,0,.3)', margin: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-          <span style={{ fontFamily: "'Itim',cursive", fontSize: 22 }}>{isEditing ? 'แก้ไขสินค้า' : 'เพิ่มสินค้าใหม่'}</span>
+          <span style={{ fontFamily: "'Chonburi',cursive", fontSize: 22 }}>{isEditing ? 'แก้ไขสินค้า' : 'เพิ่มสินค้าใหม่'}</span>
           <button onClick={onClose} style={{ width: 32, height: 32, border: 'none', borderRadius: '50%', background: 'var(--bg)', cursor: 'pointer', fontSize: 16, color: 'var(--muted)' }}>✕</button>
         </div>
 

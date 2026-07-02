@@ -8,12 +8,11 @@ import { api } from './api';
 export interface PosOptions {
   theme?: ThemeName;
   storeName?: string;
-  lowStockThreshold?: number;
 }
 
 export function usePos(opts: PosOptions = {}, user: User | null) {
   const [screen, setScreen] = useState<Screen>('pos');
-  const [theme, setThemeState] = useState<ThemeName>(opts.theme || 'peach');
+  const [theme, setThemeState] = useState<ThemeName>(opts.theme || 'morning');
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartMap>({});
@@ -66,6 +65,10 @@ export function usePos(opts: PosOptions = {}, user: User | null) {
       ]);
       setCategories(cats);
       setProducts(prods);
+      const lowStockCount = prods.filter((p) => p.stock <= p.reorderLevel).length;
+      if (lowStockCount > 0) {
+        toast(`สินค้าใกล้หมด ${lowStockCount} รายการ`, 'warn');
+      }
     } catch (err: any) {
       toast(err?.message || 'ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้', 'warn');
     }
@@ -90,6 +93,8 @@ export function usePos(opts: PosOptions = {}, user: User | null) {
 
 
   const money = useCallback((v: number) => '฿' + Number(v || 0).toLocaleString('en-US'), []);
+
+  const lowStockCount = useMemo(() => products.filter((p) => p.stock <= p.reorderLevel).length, [products]);
 
   const addToCart = useCallback((id: string) => {
     setCart((prevCart) => {
@@ -345,7 +350,7 @@ export function usePos(opts: PosOptions = {}, user: User | null) {
     openPay, closePay, setCash, confirmPay, closeReceipt,
     openAdd, openEdit, closeProduct, onImg, genBarcode, saveProduct, deleteProduct,
     openCat, closeCat, saveCat, renameCat, deleteCat,
-    lowStockThreshold: opts.lowStockThreshold ?? 5,
+    lowStockCount,
     storeName: opts.storeName || 'โชคดีการค้า',
   };
 }

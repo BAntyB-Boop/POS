@@ -51,6 +51,7 @@ export function mapProductFromDb(p: any): Product {
     cost: (p.cost_price || 0) / 100,
     cat: String(p.category_id),
     stock: p.quantity_in_stock || 0,
+    reorderLevel: p.reorder_level ?? 5,
     icon: p.icon || '',
     img: p.image_url || null,
     barcode: p.barcode || '',
@@ -163,11 +164,9 @@ export const api = {
     };
 
     if (editingId) {
-      // PATCH doesn't accept quantity_in_stock
-      const { quantity_in_stock, ...patchBody } = body;
       const data = await request<any>(`/products/${editingId}`, {
         method: 'PATCH',
-        body: JSON.stringify(patchBody),
+        body: JSON.stringify(body),
       });
       return mapProductFromDb(data);
     } else {

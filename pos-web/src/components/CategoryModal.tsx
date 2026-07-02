@@ -26,17 +26,17 @@ function CatRow({ cat, onRename, onDelete }: { cat: Category; onRename: (id: str
       {dirty && (
         <button onClick={() => onRename(cat.id, name)} style={{ padding: '9px 13px', borderRadius: 10, border: 'none', background: 'var(--brand)', color: '#fff', font: 'inherit', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>บันทึก</button>
       )}
-      <button onClick={() => onDelete(cat.id)} style={{ padding: '9px 13px', borderRadius: 10, border: '1.5px solid #FADBD8', background: '#FDECEA', color: 'var(--danger)', font: 'inherit', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>ลบ</button>
+      <button onClick={() => onDelete(cat.id)} style={{ padding: '9px 13px', borderRadius: 10, border: '1.5px solid var(--danger)', background: 'var(--danger-soft)', color: 'var(--danger)', font: 'inherit', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>ลบ</button>
     </div>
   );
 }
 
 export default function CategoryModal({ categories, catForm, catError, onUpdate, onClose, onSave, onRename, onDelete }: Props) {
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(58,46,42,.45)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 65, padding: 20, animation: 'fade .18s ease' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(42,33,24,.45)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 65, padding: 20, animation: 'fade .18s ease' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 400, maxWidth: '100%', background: 'var(--panel)', borderRadius: 24, padding: 24, animation: 'pop .22s ease', boxShadow: '0 30px 70px rgba(0,0,0,.3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-          <span style={{ fontFamily: "'Itim',cursive", fontSize: 21 }}>จัดการหมวดหมู่</span>
+          <span style={{ fontFamily: "'Chonburi',cursive", fontSize: 21 }}>จัดการหมวดหมู่</span>
           <button onClick={onClose} style={{ width: 32, height: 32, border: 'none', borderRadius: '50%', background: 'var(--bg)', cursor: 'pointer', fontSize: 16, color: 'var(--muted)' }}>✕</button>
         </div>
 
@@ -58,7 +58,7 @@ export default function CategoryModal({ categories, catForm, catError, onUpdate,
               onChange={(e) => onUpdate({ ...catForm, name: e.target.value })}
               onKeyDown={(e) => { if (e.key === 'Enter') onSave(); }}
               placeholder="เช่น เครื่องเขียน"
-              style={catError ? { ...inputStyle, border: '1.5px solid var(--danger)', background: '#FDECEA' } : inputStyle}
+              style={catError ? { ...inputStyle, border: '1.5px solid var(--danger)', background: 'var(--danger-soft)' } : inputStyle}
             />
             <button onClick={onSave} style={{ padding: '10px 16px', borderRadius: 12, border: 'none', background: 'var(--brand)', color: '#fff', font: 'inherit', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: 'var(--shadow)', whiteSpace: 'nowrap' }}>เพิ่ม</button>
           </div>

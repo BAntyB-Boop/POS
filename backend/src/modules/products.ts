@@ -131,7 +131,7 @@ export const productsModule = new Elysia({ prefix: '/products' })
   )
   .patch(
     '/:id',
-    ({ params, body }) => {
+    ({ params, body, user }) => {
       const existing = db.select().from(products).where(eq(products.id, params.id)).get();
       if (!existing) throw new AppError(404, 'PRODUCT_NOT_FOUND', 'Product not found');
 
@@ -145,23 +145,43 @@ export const productsModule = new Elysia({ prefix: '/products' })
         if (!category) throw new AppError(404, 'CATEGORY_NOT_FOUND', 'Category not found');
       }
 
-      const updated = db
-        .update(products)
-        .set({
-          categoryId: body.category_id,
-          barcode: body.barcode,
-          name: body.name,
-          description: body.description,
-          costPrice: body.cost_price,
-          salePrice: body.sale_price,
-          reorderLevel: body.reorder_level,
-          imageUrl: body.image_url,
-          icon: body.icon,
-          updatedAt: new Date(),
-        })
-        .where(eq(products.id, params.id))
-        .returning()
-        .get();
+      const updated = db.transaction((tx) => {
+        let finalStock = existing.quantityInStock;
+
+        if (body.quantity_in_stock !== undefined && body.quantity_in_stock !== existing.quantityInStock) {
+          finalStock = body.quantity_in_stock;
+          const delta = finalStock - existing.quantityInStock;
+
+          tx.insert(stockMovements)
+            .values({
+              productId: existing.id,
+              userId: Number(user.sub),
+              type: 'adjustment',
+              quantity: delta,
+              reason: 'Manual adjustment via product edit',
+            })
+            .run();
+        }
+
+        return tx
+          .update(products)
+          .set({
+            categoryId: body.category_id,
+            barcode: body.barcode,
+            name: body.name,
+            description: body.description,
+            costPrice: body.cost_price,
+            salePrice: body.sale_price,
+            quantityInStock: finalStock,
+            reorderLevel: body.reorder_level,
+            imageUrl: body.image_url,
+            icon: body.icon,
+            updatedAt: new Date(),
+          })
+          .where(eq(products.id, params.id))
+          .returning()
+          .get();
+      });
 
       return toSnakeCase(updated);
     },
@@ -175,6 +195,7 @@ export const productsModule = new Elysia({ prefix: '/products' })
         description: t.Optional(t.String()),
         cost_price: t.Optional(t.Integer({ minimum: 0 })),
         sale_price: t.Optional(t.Integer({ minimum: 0 })),
+        quantity_in_stock: t.Optional(t.Integer({ minimum: 0 })),
         reorder_level: t.Optional(t.Integer({ minimum: 0 })),
         image_url: t.Optional(t.String()),
         icon: t.Optional(t.String()),
