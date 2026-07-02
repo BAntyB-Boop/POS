@@ -32,7 +32,7 @@ function resolveLines(lines: OrderLineInput[]): ResolvedLine[] {
         ? db.select().from(products).where(eq(products.id, line.product_id)).get()
         : db.select().from(products).where(eq(products.barcode, line.barcode as string)).get();
 
-    if (!product) {
+    if (!product || !product.isActive) {
       throw new AppError(
         404,
         'PRODUCT_NOT_FOUND',

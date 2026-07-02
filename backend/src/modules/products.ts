@@ -1,4 +1,4 @@
-import { and, eq, like, lte, or, sql } from 'drizzle-orm';
+import { and, eq, like, lte, or, sql, type SQL } from 'drizzle-orm';
 import { Elysia, t } from 'elysia';
 import { db } from '../db';
 import { categories, orderItems, products, stockMovements } from '../db/schema';
@@ -15,7 +15,7 @@ export const productsModule = new Elysia({ prefix: '/products' })
       const limit = Math.min(query.limit ?? 20, 200);
       const offset = (page - 1) * limit;
 
-      const conditions = [];
+      const conditions: (SQL | undefined)[] = [eq(products.isActive, true)];
       if (query.search) {
         conditions.push(or(like(products.name, `%${query.search}%`), eq(products.barcode, query.search)));
       }
@@ -25,7 +25,7 @@ export const productsModule = new Elysia({ prefix: '/products' })
       if (query.low_stock) {
         conditions.push(lte(products.quantityInStock, products.reorderLevel));
       }
-      const where = conditions.length ? and(...conditions) : undefined;
+      const where = and(...conditions);
 
       const items = db.select().from(products).where(where).limit(limit).offset(offset).all();
       const total =
@@ -51,7 +51,11 @@ export const productsModule = new Elysia({ prefix: '/products' })
   .get(
     '/barcode/:barcode',
     ({ params }) => {
-      const row = db.select().from(products).where(eq(products.barcode, params.barcode)).get();
+      const row = db
+        .select()
+        .from(products)
+        .where(and(eq(products.barcode, params.barcode), eq(products.isActive, true)))
+        .get();
       if (!row) throw new AppError(404, 'PRODUCT_NOT_FOUND', 'Product not found');
       return toSnakeCase(row);
     },
@@ -219,11 +223,15 @@ export const productsModule = new Elysia({ prefix: '/products' })
         .where(eq(orderItems.productId, params.id))
         .all().length;
       if (movementCount > 0 || orderItemCount > 0) {
-        throw new AppError(409, 'PRODUCT_IN_USE', 'Product has related stock movements or orders');
+        db.update(products)
+          .set({ isActive: false, updatedAt: new Date() })
+          .where(eq(products.id, params.id))
+          .run();
+        return { success: true, archived: true };
       }
 
       db.delete(products).where(eq(products.id, params.id)).run();
-      return { success: true };
+      return { success: true, archived: false };
     },
     { auth: 'admin', params: t.Object({ id: t.Numeric() }) },
   );

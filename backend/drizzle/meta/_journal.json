@@ -15,6 +15,13 @@
       "when": 1782971850547,
       "tag": "0001_petite_arachne",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1782997493965,
+      "tag": "0002_perfect_secret_warriors",
+      "breakpoints": true
     }
   ]
 }

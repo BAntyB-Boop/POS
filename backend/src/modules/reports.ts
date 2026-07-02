@@ -141,7 +141,7 @@ export const reportsModule = new Elysia({ prefix: '/reports' })
       const rows = db
         .select()
         .from(products)
-        .where(lte(products.quantityInStock, products.reorderLevel))
+        .where(and(lte(products.quantityInStock, products.reorderLevel), eq(products.isActive, true)))
         .orderBy(asc(products.quantityInStock))
         .limit(limit)
         .all();

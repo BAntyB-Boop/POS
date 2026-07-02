@@ -34,6 +34,7 @@ export const products = sqliteTable('products', {
   reorderLevel: integer('reorder_level').notNull().default(5),
   imageUrl: text('image_url'),
   icon: text('icon').notNull().default(''),
+  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .$defaultFn(() => new Date()),

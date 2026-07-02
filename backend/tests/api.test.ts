@@ -7,6 +7,7 @@ import { app } from '../src/index';
 let adminToken: string;
 let cashierToken: string;
 let productId: number;
+let categoryId: number;
 const productBarcode = '1234567890128';
 
 async function api(path: string, init?: RequestInit): Promise<Response> {
@@ -41,6 +42,7 @@ beforeAll(async () => {
     .run();
 
   const category = db.insert(categories).values({ name: 'Test Category' }).returning().get();
+  categoryId = category.id;
 
   const product = db
     .insert(products)
@@ -167,6 +169,77 @@ describe('checkout', () => {
     });
     const product = await json(productRes);
     expect(product.quantity_in_stock).toBe(7);
+  });
+});
+
+describe('product deletion', () => {
+  it('archives (soft-deletes) a product with order/stock history instead of erroring', async () => {
+    const res = await api(`/api/products/${productId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.status).toBe(200);
+    const body = await json(res);
+    expect(body.success).toBe(true);
+    expect(body.archived).toBe(true);
+
+    // Hidden from the product list...
+    const listRes = await api('/api/products', { headers: { Authorization: `Bearer ${adminToken}` } });
+    const list = await json(listRes);
+    expect(list.items.some((p: any) => p.id === productId)).toBe(false);
+
+    // ...and from barcode lookup...
+    const barcodeRes = await api(`/api/products/barcode/${productBarcode}`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(barcodeRes.status).toBe(404);
+
+    // ...but the row itself still exists (soft delete, not hard delete).
+    const byIdRes = await api(`/api/products/${productId}`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(byIdRes.status).toBe(200);
+    const byId = await json(byIdRes);
+    expect(byId.is_active).toBe(false);
+  });
+
+  it('blocks checkout against an archived product', async () => {
+    const res = await api('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cashierToken}` },
+      body: JSON.stringify({
+        items: [{ barcode: productBarcode, quantity: 1 }],
+        payment_method: 'cash',
+        received_amount: 1000,
+      }),
+    });
+    expect(res.status).toBe(404);
+  });
+
+  it('hard-deletes a product with no order/stock history', async () => {
+    const created = await api('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({
+        category_id: categoryId,
+        barcode: '1112223334445',
+        name: 'Unused Product',
+        cost_price: 100,
+        sale_price: 200,
+      }),
+    });
+    const { id } = await json(created);
+
+    const res = await api(`/api/products/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.status).toBe(200);
+    const body = await json(res);
+    expect(body.archived).toBe(false);
+
+    const getRes = await api(`/api/products/${id}`, { headers: { Authorization: `Bearer ${adminToken}` } });
+    expect(getRes.status).toBe(404);
   });
 });
 
