@@ -36,7 +36,7 @@ export default function PosScreen({
   const chips = [{ id: 'all', name: 'ทั้งหมด' }, ...categories];
 
   return (
-    <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
+    <div className="pos-screen-layout" style={{ flex: 1, display: 'flex', minHeight: 0 }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, padding: '18px 20px', gap: 15 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 16, padding: '11px 16px' }}>
           <input value={search} onChange={(e) => onSearch(e.target.value)} placeholder="ค้นหาสินค้า..." style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 15, color: 'var(--ink)' }} />

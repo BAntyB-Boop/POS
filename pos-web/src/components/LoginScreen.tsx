@@ -59,7 +59,7 @@ export default function LoginScreen({ storeName, onLogin }: Props) {
   );
 
   return (
-    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: 'var(--bg)' }}>
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '30px 20px', background: 'var(--bg)', overflowY: 'auto', minHeight: '100%' }}>
       <div style={{ width: 400, maxWidth: '100%', animation: 'pop .25s ease' }}>
         <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 26, padding: '34px 30px', boxShadow: 'var(--shadow)' }}>
 
