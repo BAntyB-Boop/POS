@@ -25,10 +25,13 @@ export function usePos(opts: PosOptions = {}, user: User | null) {
 
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<ProductForm>({ name: '', description: '', price: '', cat: 'drink', stock: '', barcode: '', icon: '', img: null });
+  const [form, setForm] = useState<ProductForm>({ name: '', description: '', price: '', cat: '', stock: '', barcode: '', icon: '', img: null });
+  // ช่องในฟอร์มสินค้าที่ยังไม่ผ่าน validation — ใช้ไฮไลต์กรอบแดง
+  const [formErrors, setFormErrors] = useState<Partial<Record<'name' | 'cat' | 'price' | 'barcode', boolean>>>({});
 
   const [showCatModal, setShowCatModal] = useState(false);
   const [catForm, setCatForm] = useState<CategoryForm>({ name: '', icon: '' });
+  const [catError, setCatError] = useState(false);
 
   const [showPay, setShowPay] = useState(false);
   const [payMethod, setPayMethod] = useState<PayMethod>('cash');
@@ -184,10 +187,12 @@ export function usePos(opts: PosOptions = {}, user: User | null) {
       toast('กรุณาเพิ่มหมวดหมู่ก่อนเพิ่มสินค้า', 'warn');
       setShowCatModal(true);
       setCatForm({ name: '', icon: '' });
+      setCatError(false);
       return;
     }
     setShowProductModal(true);
     setEditingId(null);
+    setFormErrors({});
     setForm({ name: '', description: '', price: '', cat: categories[0]?.id || '', stock: '', barcode: '', icon: '', img: null });
   }, [categories, toast]);
 
@@ -196,6 +201,7 @@ export function usePos(opts: PosOptions = {}, user: User | null) {
     if (!p) return;
     setShowProductModal(true);
     setEditingId(id);
+    setFormErrors({});
     setForm({ name: p.name, description: p.description || '', price: String(p.price), cat: p.cat, stock: String(p.stock), barcode: p.barcode || '', icon: p.icon, img: p.img });
   }, [products]);
 
@@ -203,6 +209,8 @@ export function usePos(opts: PosOptions = {}, user: User | null) {
 
   const updForm = useCallback(<K extends keyof ProductForm>(k: K, v: ProductForm[K]) => {
     setForm((prev) => ({ ...prev, [k]: v }));
+    // พอผู้ใช้เริ่มแก้ช่องไหน ให้เอากรอบแดงของช่องนั้นออก
+    setFormErrors((prev) => (prev[k as keyof typeof prev] ? { ...prev, [k]: false } : prev));
   }, []);
 
   const onImg = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,10 +229,21 @@ export function usePos(opts: PosOptions = {}, user: User | null) {
   }, [updForm, toast]);
 
   const saveProduct = useCallback(async () => {
-    if (!form.name.trim()) { toast('กรุณาใส่ชื่อสินค้า', 'warn'); return; }
-    if (!form.cat) { toast('กรุณาเลือกหมวดหมู่', 'warn'); return; }
-    const price = parseFloat(form.price) || 0;
-    if (price <= 0) { toast('กรุณาใส่ราคา', 'warn'); return; }
+    // เช็คทุกช่องพร้อมกัน แล้วไฮไลต์กรอบแดงทุกช่องที่ขาด
+    const errors = {
+      name: !form.name.trim(),
+      cat: !form.cat,
+      price: (parseFloat(form.price) || 0) <= 0,
+      barcode: !form.barcode.trim(),
+    };
+    if (errors.name || errors.cat || errors.price || errors.barcode) {
+      setFormErrors(errors);
+      if (errors.name) toast('กรุณาใส่ชื่อสินค้า', 'warn');
+      else if (errors.cat) toast('กรุณาเลือกหมวดหมู่', 'warn');
+      else if (errors.price) toast('กรุณาใส่ราคา', 'warn');
+      else toast('กรุณาใส่บาร์โค้ด หรือกดปุ่ม "สแกน" เพื่อสร้างอัตโนมัติ', 'warn');
+      return;
+    }
     try {
       const saved = await api.saveProduct(form, editingId);
       if (editingId) {
@@ -256,11 +275,16 @@ export function usePos(opts: PosOptions = {}, user: User | null) {
     }
   }, [toast]);
 
-  const openCat = useCallback(() => { setShowCatModal(true); setCatForm({ name: '', icon: '' }); }, []);
+  const openCat = useCallback(() => { setShowCatModal(true); setCatForm({ name: '', icon: '' }); setCatError(false); }, []);
   const closeCat = useCallback(() => setShowCatModal(false), []);
 
+  const updateCatForm = useCallback((next: CategoryForm) => {
+    setCatForm(next);
+    setCatError(false);
+  }, []);
+
   const saveCat = useCallback(async () => {
-    if (!catForm.name.trim()) { toast('กรุณาใส่ชื่อหมวดหมู่', 'warn'); return; }
+    if (!catForm.name.trim()) { setCatError(true); toast('กรุณาใส่ชื่อหมวดหมู่', 'warn'); return; }
     try {
       const saved = await api.saveCategory(catForm);
       setCategories((prev) => prev.concat([saved]));
@@ -309,8 +333,8 @@ export function usePos(opts: PosOptions = {}, user: User | null) {
     categories, products,
     cart, orderNote, setOrderNote, search, setSearch, activeCat, setActiveCat,
     pSearch, setPSearch, pCat, setPCat,
-    showProductModal, editingId, form, updForm, setForm,
-    showCatModal, catForm, setCatForm,
+    showProductModal, editingId, form, updForm, setForm, formErrors,
+    showCatModal, catForm, setCatForm, updateCatForm, catError,
     showPay, payMethod, setPayMethod, cashReceived,
     showReceipt, receipt,
     reportPeriod, setReportPeriod, monthOffset, setMonthOffset,

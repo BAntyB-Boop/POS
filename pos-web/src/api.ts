@@ -31,7 +31,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const data = await response.json();
   if (!response.ok) {
-    const errorMsg = data?.error?.message || data?.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์';
+    let errorMsg = data?.error?.message || data?.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์';
+    // validation error จาก Elysia เป็น JSON ก้อนใหญ่ อ่านไม่รู้เรื่อง — แปลงเป็นข้อความไทย
+    if (data?.type === 'validation' || (typeof errorMsg === 'string' && errorMsg.startsWith('{'))) {
+      errorMsg = 'ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบข้อมูลที่กรอกอีกครั้ง';
+    }
     throw new Error(errorMsg);
   }
   return data as T;
@@ -152,9 +156,10 @@ export const api = {
       cost_price: Math.round((parseFloat(form.price) || 0) * 0.72 * 100), // Default cost formula: 72%
       category_id: parseInt(form.cat, 10),
       quantity_in_stock: parseInt(form.stock, 10) || 0,
-      barcode: form.barcode,
+      barcode: form.barcode.trim(),
       icon: form.icon,
-      image_url: form.img,
+      // backend รับ image_url เป็น string เท่านั้น — ถ้าไม่มีรูปต้องไม่ส่ง field นี้ (null จะไม่ผ่าน validation)
+      image_url: form.img || undefined,
     };
 
     if (editingId) {

@@ -148,6 +148,7 @@ function App(props: PosOptions) {
           isEditing={!!pos.editingId}
           form={pos.form}
           categories={pos.categories}
+          errors={pos.formErrors}
           onUpdate={pos.updForm}
           onImg={pos.onImg}
           onGenBarcode={pos.genBarcode}
@@ -160,7 +161,8 @@ function App(props: PosOptions) {
         <CategoryModal
           categories={pos.categories}
           catForm={pos.catForm}
-          onUpdate={pos.setCatForm}
+          catError={pos.catError}
+          onUpdate={pos.updateCatForm}
           onClose={pos.closeCat}
           onSave={pos.saveCat}
           onRename={pos.renameCat}

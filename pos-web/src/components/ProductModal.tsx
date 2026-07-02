@@ -6,6 +6,7 @@ interface Props {
   isEditing: boolean;
   form: ProductForm;
   categories: Category[];
+  errors: Partial<Record<'name' | 'cat' | 'price' | 'barcode', boolean>>;
   onUpdate: <K extends keyof ProductForm>(k: K, v: ProductForm[K]) => void;
   onImg: (e: ChangeEvent<HTMLInputElement>) => void;
   onGenBarcode: () => void;
@@ -13,7 +14,11 @@ interface Props {
   onSave: () => void;
 }
 
-export default function ProductModal({ isEditing, form, categories, onUpdate, onImg, onGenBarcode, onClose, onSave }: Props) {
+export default function ProductModal({ isEditing, form, categories, errors, onUpdate, onImg, onGenBarcode, onClose, onSave }: Props) {
+  const fieldStyle = (k: keyof typeof errors): React.CSSProperties =>
+    errors[k] ? { ...inputStyle, border: '1.5px solid var(--danger)', background: '#FDECEA' } : inputStyle;
+  const labelStyle = (k: keyof typeof errors): React.CSSProperties =>
+    ({ fontSize: 12, color: errors[k] ? 'var(--danger)' : 'var(--muted)', fontWeight: errors[k] ? 700 : 400, marginBottom: 6 });
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(58,46,42,.45)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60, padding: 20, animation: 'fade .18s ease', overflow: 'auto' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 480, maxWidth: '100%', background: 'var(--panel)', borderRadius: 24, padding: 24, animation: 'pop .22s ease', boxShadow: '0 30px 70px rgba(0,0,0,.3)', margin: 'auto' }}>
@@ -37,8 +42,8 @@ export default function ProductModal({ isEditing, form, categories, onUpdate, on
         </div>
 
         <div style={{ marginBottom: 13 }}>
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>ชื่อสินค้า</div>
-          <input value={form.name} onChange={(e) => onUpdate('name', e.target.value)} placeholder="เช่น น้ำดื่มสิงห์" style={inputStyle} />
+          <div style={labelStyle('name')}>ชื่อสินค้า{errors.name ? ' — กรุณากรอก' : ''}</div>
+          <input value={form.name} onChange={(e) => onUpdate('name', e.target.value)} placeholder="เช่น น้ำดื่มสิงห์" style={fieldStyle('name')} />
         </div>
 
         <div style={{ marginBottom: 13 }}>
@@ -54,14 +59,14 @@ export default function ProductModal({ isEditing, form, categories, onUpdate, on
 
         <div style={{ display: 'flex', gap: 12, marginBottom: 13 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>หมวดหมู่</div>
-            <select value={form.cat} onChange={(e) => onUpdate('cat', e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
+            <div style={labelStyle('cat')}>หมวดหมู่{errors.cat ? ' — กรุณาเลือก' : ''}</div>
+            <select value={form.cat} onChange={(e) => onUpdate('cat', e.target.value)} style={{ ...fieldStyle('cat'), cursor: 'pointer' }}>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div style={{ width: 120 }}>
-            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>ราคา (฿)</div>
-            <input value={form.price} onChange={(e) => onUpdate('price', e.target.value.replace(/[^0-9.]/g, ''))} inputMode="decimal" placeholder="0" style={inputStyle} />
+            <div style={labelStyle('price')}>ราคา (฿){errors.price ? ' — กรุณากรอก' : ''}</div>
+            <input value={form.price} onChange={(e) => onUpdate('price', e.target.value.replace(/[^0-9.]/g, ''))} inputMode="decimal" placeholder="0" style={fieldStyle('price')} />
           </div>
           <div style={{ width: 120 }}>
             <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>คงเหลือ</div>
@@ -70,9 +75,9 @@ export default function ProductModal({ isEditing, form, categories, onUpdate, on
         </div>
 
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>บาร์โค้ด</div>
+          <div style={labelStyle('barcode')}>บาร์โค้ด{errors.barcode ? ' — กรุณากรอก หรือกด "สแกน"' : ''}</div>
           <div style={{ display: 'flex', gap: 9 }}>
-            <input value={form.barcode} onChange={(e) => onUpdate('barcode', e.target.value)} placeholder="สแกนหรือพิมพ์บาร์โค้ด" style={{ ...inputStyle, flex: 1 }} />
+            <input value={form.barcode} onChange={(e) => onUpdate('barcode', e.target.value)} placeholder="สแกนหรือพิมพ์บาร์โค้ด" style={{ ...fieldStyle('barcode'), flex: 1 }} />
             <button onClick={onGenBarcode} style={{ padding: '0 16px', borderRadius: 12, border: '1.5px solid var(--line)', background: 'var(--panel)', color: 'var(--ink)', font: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>สแกน</button>
           </div>
         </div>
