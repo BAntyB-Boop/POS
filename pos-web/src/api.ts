@@ -31,7 +31,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const data = await response.json();
   if (!response.ok) {
-    const errorMsg = data?.error?.message || data?.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์';
+    let errorMsg = data?.error?.message || data?.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์';
+    // validation error จาก Elysia เป็น JSON ก้อนใหญ่ อ่านไม่รู้เรื่อง — แปลงเป็นข้อความไทย
+    if (data?.type === 'validation' || (typeof errorMsg === 'string' && errorMsg.startsWith('{'))) {
+      errorMsg = 'ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบข้อมูลที่กรอกอีกครั้ง';
+    }
     throw new Error(errorMsg);
   }
   return data as T;
@@ -47,7 +51,8 @@ export function mapProductFromDb(p: any): Product {
     cost: (p.cost_price || 0) / 100,
     cat: String(p.category_id),
     stock: p.quantity_in_stock || 0,
-    icon: p.icon || '📦',
+    reorderLevel: p.reorder_level ?? 5,
+    icon: p.icon || '',
     img: p.image_url || null,
     barcode: p.barcode || '',
   };
@@ -58,7 +63,7 @@ export function mapCategoryFromDb(c: any): Category {
   return {
     id: String(c.id),
     name: c.name,
-    icon: c.icon || '🏷️',
+    icon: c.icon || '',
   };
 }
 
@@ -68,7 +73,7 @@ export function mapSaleFromDb(s: any): Sale {
   const items = (s.items || []).map((item: any) => ({
     id: String(item.product_id),
     name: item.product_name || '',
-    icon: item.icon || '📦',
+    icon: item.icon || '',
     img: item.image_url || null,
     cat: String(item.category_id || ''),
     price: (item.unit_price || 0) / 100,
@@ -125,6 +130,20 @@ export const api = {
     return mapCategoryFromDb(data);
   },
 
+  async updateCategory(id: string, name: string): Promise<Category> {
+    const data = await request<any>(`/categories/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name }),
+    });
+    return mapCategoryFromDb(data);
+  },
+
+  async deleteCategory(id: string): Promise<void> {
+    await request<void>(`/categories/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
   async getProducts(): Promise<Product[]> {
     const data = await request<{ items: any[]; total: number }>('/products?limit=200');
     return data.items.map(mapProductFromDb);
@@ -138,17 +157,16 @@ export const api = {
       cost_price: Math.round((parseFloat(form.price) || 0) * 0.72 * 100), // Default cost formula: 72%
       category_id: parseInt(form.cat, 10),
       quantity_in_stock: parseInt(form.stock, 10) || 0,
-      barcode: form.barcode,
+      barcode: form.barcode.trim(),
       icon: form.icon,
-      image_url: form.img,
+      // backend รับ image_url เป็น string เท่านั้น — ถ้าไม่มีรูปต้องไม่ส่ง field นี้ (null จะไม่ผ่าน validation)
+      image_url: form.img || undefined,
     };
 
     if (editingId) {
-      // PATCH doesn't accept quantity_in_stock
-      const { quantity_in_stock, ...patchBody } = body;
       const data = await request<any>(`/products/${editingId}`, {
         method: 'PATCH',
-        body: JSON.stringify(patchBody),
+        body: JSON.stringify(body),
       });
       return mapProductFromDb(data);
     } else {

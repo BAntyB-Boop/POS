@@ -55,18 +55,31 @@ export const reportsModule = new Elysia({ prefix: '/reports' })
     '/sales-over-time',
     ({ query }) => {
       const { fromMs, toMs } = resolvePeriod(query.from, query.to);
+      const isHourly = toMs - fromMs <= 86400000;
 
-      const rows = db.all<{ day: string; revenue: number; order_count: number }>(sql`
-        select strftime('%Y-%m-%d', ${orders.createdAt} / 1000, 'unixepoch', '+7 hours') as day,
-               coalesce(sum(${orders.totalAmount}), 0) as revenue,
-               count(*) as order_count
-        from ${orders}
-        where ${orders.createdAt} >= ${fromMs} and ${orders.createdAt} < ${toMs}
-        group by day
-        order by day
-      `);
-
-      return rows.map((row) => ({ date: row.day, revenue: row.revenue, order_count: row.order_count }));
+      if (isHourly) {
+        const rows = db.all<{ hour: string; revenue: number; order_count: number }>(sql`
+          select strftime('%H', ${orders.createdAt} / 1000, 'unixepoch', '+7 hours') as hour,
+                 coalesce(sum(${orders.totalAmount}), 0) as revenue,
+                 count(*) as order_count
+          from ${orders}
+          where ${orders.createdAt} >= ${fromMs} and ${orders.createdAt} < ${toMs}
+          group by hour
+          order by hour
+        `);
+        return rows.map((row) => ({ date: row.hour, revenue: row.revenue, order_count: row.order_count }));
+      } else {
+        const rows = db.all<{ day: string; revenue: number; order_count: number }>(sql`
+          select strftime('%Y-%m-%d', ${orders.createdAt} / 1000, 'unixepoch', '+7 hours') as day,
+                 coalesce(sum(${orders.totalAmount}), 0) as revenue,
+                 count(*) as order_count
+          from ${orders}
+          where ${orders.createdAt} >= ${fromMs} and ${orders.createdAt} < ${toMs}
+          group by day
+          order by day
+        `);
+        return rows.map((row) => ({ date: row.day, revenue: row.revenue, order_count: row.order_count }));
+      }
     },
     { auth: true, query: periodQuery },
   )

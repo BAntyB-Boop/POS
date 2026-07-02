@@ -10,7 +10,6 @@ interface Props {
   onSearch: (v: string) => void;
   activeCat: string;
   onSelectCat: (id: string) => void;
-  lowStockThreshold: number;
   onAdd: (id: string) => void;
   cart: CartMap;
   orderNote: string;
@@ -22,7 +21,7 @@ interface Props {
 }
 
 export default function PosScreen({
-  categories, products, search, onSearch, activeCat, onSelectCat, lowStockThreshold,
+  categories, products, search, onSearch, activeCat, onSelectCat,
   onAdd, cart, orderNote, onOrderNote, onInc, onDec, onClearCart, onOpenPay,
 }: Props) {
   const q = search.trim().toLowerCase();
@@ -64,14 +63,14 @@ export default function PosScreen({
                   className="product-card"
                   style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 9, padding: 13, background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, cursor: 'pointer', textAlign: 'left', font: 'inherit', color: 'inherit', transition: '.15s', boxShadow: '0 2px 6px rgba(180,120,90,.05)' }}
                 >
-                  {p.stock <= lowStockThreshold && (
-                    <div style={{ position: 'absolute', top: 9, right: 9, background: '#FDE4E0', color: 'var(--danger)', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999 }}>ใกล้หมด</div>
+                  {p.stock <= p.reorderLevel && (
+                    <div style={{ position: 'absolute', top: 9, right: 9, background: 'var(--danger-soft)', color: 'var(--danger)', fontSize: 10, fontWeight: 700, padding: '3px 8px 3px 7px', borderRadius: '3px 10px 10px 3px', borderLeft: '1.5px dashed var(--danger)' }}>ใกล้หมด</div>
                   )}
                   <Thumb name={p.name} img={p.img} size={56} radius={15} />
                   <div style={{ fontSize: 13.5, fontWeight: 600, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 35 }}>{p.name}</div>
                   <div style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 30 }}>{p.description}</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-                    <span style={{ fontFamily: "'Itim',cursive", fontSize: 18, color: 'var(--brand)' }}>{money(p.price)}</span>
+                    <span style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: 16, color: 'var(--brand)' }}>{money(p.price)}</span>
                     <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>คงเหลือ {p.stock}</span>
                   </div>
                 </button>
@@ -84,7 +83,7 @@ export default function PosScreen({
       <aside className="cart-aside">
         <div style={{ padding: '18px 20px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-            <span style={{ fontFamily: "'Itim',cursive", fontSize: 19 }}>ตะกร้า</span>
+            <span style={{ fontFamily: "'Chonburi',cursive", fontSize: 19 }}>ตะกร้า</span>
             <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand)', background: 'var(--soft)', padding: '2px 9px', borderRadius: 999 }}>{count} ชิ้น</span>
           </div>
           <button onClick={onClearCart} style={{ border: 'none', background: 'transparent', color: 'var(--muted)', fontSize: 13, cursor: 'pointer', padding: 4 }}>ล้าง</button>
@@ -112,7 +111,7 @@ export default function PosScreen({
                   <span style={{ minWidth: 22, textAlign: 'center', fontSize: 14, fontWeight: 700 }}>{qty}</span>
                   <button onClick={() => onInc(id)} style={{ width: 26, height: 26, border: 'none', borderRadius: '50%', background: 'var(--brand)', cursor: 'pointer', fontSize: 16, color: '#fff', lineHeight: 1 }}>+</button>
                 </div>
-                <div style={{ width: 62, textAlign: 'right', fontSize: 14, fontWeight: 700 }}>{money(p.price * qty)}</div>
+                <div style={{ width: 62, textAlign: 'right', fontFamily: "'Space Mono',monospace", fontSize: 14, fontWeight: 700 }}>{money(p.price * qty)}</div>
               </div>
             );
           })}
@@ -129,14 +128,14 @@ export default function PosScreen({
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <span style={{ fontSize: 14, color: 'var(--muted)' }}>ยอดรวมทั้งหมด</span>
-            <span style={{ fontFamily: "'Itim',cursive", fontSize: 28, color: 'var(--ink)' }}>{money(total)}</span>
+            <span style={{ fontFamily: "'Space Mono',monospace", fontWeight: 700, fontSize: 26, color: 'var(--ink)' }}>{money(total)}</span>
           </div>
           <button
             onClick={onOpenPay}
             disabled={total <= 0}
-            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderRadius: 18, border: 'none', cursor: total > 0 ? 'pointer' : 'not-allowed', fontSize: 16, fontWeight: 800, color: '#fff', background: total > 0 ? 'var(--brand)' : '#d9cfc9', boxShadow: total > 0 ? 'var(--shadow)' : 'none', transition: '.15s', font: 'inherit' }}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderRadius: 18, border: 'none', cursor: total > 0 ? 'pointer' : 'not-allowed', fontSize: 16, fontWeight: 800, color: '#fff', background: total > 0 ? 'var(--brand)' : 'var(--disabled)', boxShadow: total > 0 ? 'var(--shadow)' : 'none', transition: '.15s', font: 'inherit' }}
           >
-            <span>ชำระเงิน</span><span>{money(total)}</span>
+            <span>ชำระเงิน</span><span style={{ fontFamily: "'Space Mono',monospace" }}>{money(total)}</span>
           </button>
         </div>
       </aside>

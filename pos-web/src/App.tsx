@@ -44,11 +44,14 @@ function App(props: PosOptions) {
     <div
       ref={pos.rootRef}
       style={{
-        ['--ok' as string]: '#3FBF8F',
-        ['--warn' as string]: '#F4A63B',
-        ['--danger' as string]: '#F26B6B',
+        ['--ok' as string]: '#3F7D52',
+        ['--warn' as string]: '#B9862A',
+        ['--danger' as string]: '#96332A',
+        ['--danger-soft' as string]: '#F3DAD3',
+        ['--warn-soft' as string]: '#F6E7C4',
+        ['--disabled' as string]: '#D6C9A0',
         display: 'flex', height: '100vh', width: '100%', overflow: 'hidden',
-        background: 'var(--bg)', fontFamily: "'Noto Sans Thai',system-ui,sans-serif", color: 'var(--ink)',
+        background: 'var(--bg)', fontFamily: "'IBM Plex Sans Thai',system-ui,sans-serif", color: 'var(--ink)',
       }}
     >
       {!user ? (
@@ -63,6 +66,7 @@ function App(props: PosOptions) {
         onClose={() => setSidebarOpen(false)}
         user={user}
         onLogout={handleLogout}
+        lowStockCount={pos.lowStockCount}
       />
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -72,6 +76,15 @@ function App(props: PosOptions) {
           now={pos.now}
           onSetTheme={pos.setTheme}
           onToggleSidebar={() => setSidebarOpen((v) => !v)}
+          lowStockProducts={pos.products.filter((p) => p.stock <= p.reorderLevel)}
+          onEditProduct={(id) => {
+            pos.setScreen('products');
+            if (user.role === 'admin') {
+              pos.openEdit(id);
+            } else {
+              pos.setSearch(pos.products.find((p) => p.id === id)?.name || '');
+            }
+          }}
         />
 
         {pos.screen === 'pos' && (
@@ -82,7 +95,6 @@ function App(props: PosOptions) {
             onSearch={pos.setSearch}
             activeCat={pos.activeCat}
             onSelectCat={pos.setActiveCat}
-            lowStockThreshold={pos.lowStockThreshold}
             onAdd={pos.addToCart}
             cart={pos.cart}
             orderNote={pos.orderNote}
@@ -102,7 +114,7 @@ function App(props: PosOptions) {
             onPSearch={pos.setPSearch}
             pCat={pos.pCat}
             onSelectPCat={pos.setPCat}
-            lowStockThreshold={pos.lowStockThreshold}
+            isAdmin={user.role === 'admin'}
             onOpenCat={pos.openCat}
             onOpenAdd={pos.openAdd}
             onEdit={pos.openEdit}
@@ -120,7 +132,6 @@ function App(props: PosOptions) {
             monthOffset={pos.monthOffset}
             onPrevMonth={() => pos.setMonthOffset((v) => Math.max(-24, v - 1))}
             onNextMonth={() => pos.setMonthOffset((v) => Math.min(0, v + 1))}
-            lowStockThreshold={pos.lowStockThreshold}
           />
         )}
       </main>
@@ -147,6 +158,7 @@ function App(props: PosOptions) {
           isEditing={!!pos.editingId}
           form={pos.form}
           categories={pos.categories}
+          errors={pos.formErrors}
           onUpdate={pos.updForm}
           onImg={pos.onImg}
           onGenBarcode={pos.genBarcode}
@@ -157,10 +169,14 @@ function App(props: PosOptions) {
 
       {pos.showCatModal && (
         <CategoryModal
+          categories={pos.categories}
           catForm={pos.catForm}
-          onUpdate={pos.setCatForm}
+          catError={pos.catError}
+          onUpdate={pos.updateCatForm}
           onClose={pos.closeCat}
           onSave={pos.saveCat}
+          onRename={pos.renameCat}
+          onDelete={pos.deleteCat}
         />
       )}
 

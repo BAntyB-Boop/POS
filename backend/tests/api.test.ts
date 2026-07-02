@@ -99,6 +99,32 @@ describe('products', () => {
     });
     expect(res.status).toBe(404);
   });
+
+  it('updates product stock via PATCH', async () => {
+    const res = await api(`/api/products/${productId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ quantity_in_stock: 15 }),
+    });
+    expect(res.status).toBe(200);
+    const body = await json(res);
+    expect(body.quantity_in_stock).toBe(15);
+
+    // Verify in db
+    const productRes = await api(`/api/products/${productId}`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    const product = await json(productRes);
+    expect(product.quantity_in_stock).toBe(15);
+
+    // Restore stock back to 10
+    const restoreRes = await api(`/api/products/${productId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ quantity_in_stock: 10 }),
+    });
+    expect(restoreRes.status).toBe(200);
+  });
 });
 
 describe('checkout', () => {

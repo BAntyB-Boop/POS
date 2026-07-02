@@ -6,6 +6,7 @@ import BillModal from './BillModal';
 import DayDetailModal from './DayDetailModal';
 import { api } from '../api';
 import Thumb from './Thumb';
+import { TrendingUp, Receipt, ShoppingBag, BarChart3, Crown, AlertTriangle, PieChart, History, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 
 interface Props {
   categories: Category[];
@@ -16,7 +17,6 @@ interface Props {
   monthOffset: number;
   onPrevMonth: () => void;
   onNextMonth: () => void;
-  lowStockThreshold: number;
 }
 
 function toYmd(d: Date): string {
@@ -27,7 +27,7 @@ function toYmd(d: Date): string {
 }
 
 export default function ReportsScreen({
-  categories, products, now, reportPeriod, onSetPeriod, monthOffset, onPrevMonth, onNextMonth, lowStockThreshold,
+  categories, products, now, reportPeriod, onSetPeriod, monthOffset, onPrevMonth, onNextMonth,
 }: Props) {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedBill, setSelectedBill] = useState<Sale | null>(null);
@@ -59,9 +59,7 @@ export default function ReportsScreen({
           toYmdStr = toYmd(nextMonth);
         } else {
           fromYmd = toYmd(rnow);
-          const tomorrow = new Date(rnow);
-          tomorrow.setDate(tomorrow.getDate() + 1);
-          toYmdStr = toYmd(tomorrow);
+          toYmdStr = fromYmd;
         }
 
         const [sum, timeSales, top, byCat, recent] = await Promise.all([
@@ -134,14 +132,35 @@ export default function ReportsScreen({
   const itemsSold = summary.itemsSold;
   const avg = summary.avgPerOrder;
 
-  const dayAgg: Record<number, number> = {};
-  salesOverTime.forEach((row) => {
-    const day = parseInt(row.date.split('-')[2], 10);
-    dayAgg[day] = row.revenue;
+  // 1. Generate full hourly list for Today
+  const hourlyData = Array.from({ length: 24 }, (_, i) => {
+    const hourStr = String(i).padStart(2, '0');
+    const match = salesOverTime.find((row) => row.date === hourStr);
+    return {
+      label: `${hourStr}:00 น.`,
+      shortLabel: `${hourStr}`,
+      revenue: match ? match.revenue : 0,
+      orderCount: match ? match.orderCount : 0,
+    };
   });
-  const dayKeys = Object.keys(dayAgg).map(Number).sort((a, b) => a - b);
-  const dvals = dayKeys.map((k) => dayAgg[k]);
-  const dmax = dvals.length ? Math.max(...dvals) : 1;
+
+  // 2. Generate full daily list for Month
+  const daysInMonth = new Date(selMonth.getFullYear(), selMonth.getMonth() + 1, 0).getDate();
+  const dailyData = Array.from({ length: daysInMonth }, (_, i) => {
+    const dayNum = i + 1;
+    const datePrefix = toYmd(selMonth).substring(0, 8); // e.g. "2026-07-"
+    const ymdStr = `${datePrefix}${String(dayNum).padStart(2, '0')}`;
+    const match = salesOverTime.find((row) => row.date === ymdStr);
+    return {
+      label: `วันที่ ${dayNum}`,
+      shortLabel: String(dayNum),
+      revenue: match ? match.revenue : 0,
+      orderCount: match ? match.orderCount : 0,
+    };
+  });
+
+  const chartData = isMonth ? dailyData : hourlyData;
+  const maxRevenue = Math.max(...chartData.map((d) => d.revenue), 1);
 
   const topArr = topProducts.map((t) => {
     const p = products.find((x) => x.id === t.productId);
@@ -171,7 +190,7 @@ export default function ReportsScreen({
       }).slice(0, 10)
     : recentOrders.slice(0, 6);
 
-  const lowStock = products.filter((p) => p.stock <= lowStockThreshold).sort((a, b) => a.stock - b.stock).slice(0, 8);
+  const lowStock = products.filter((p) => p.stock <= p.reorderLevel).sort((a, b) => a.stock - b.stock).slice(0, 8);
 
   const nextDisabled = monthOffset >= 0;
 
@@ -192,47 +211,140 @@ export default function ReportsScreen({
         </div>
         {isMonth && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-            <button onClick={onPrevMonth} style={{ width: 38, height: 38, flex: 'none', borderRadius: 11, border: '1.5px solid var(--line)', background: 'var(--panel)', color: 'var(--ink)', fontSize: 14, cursor: 'pointer' }}>◀</button>
-            <span style={{ fontFamily: "'Itim',cursive", fontSize: 18, minWidth: 158, textAlign: 'center' }}>{selMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</span>
-            <button onClick={onNextMonth} disabled={nextDisabled} style={{ width: 38, height: 38, flex: 'none', borderRadius: 11, border: '1.5px solid var(--line)', background: 'var(--panel)', fontSize: 14, color: nextDisabled ? '#d9cfc9' : 'var(--ink)', cursor: nextDisabled ? 'not-allowed' : 'pointer' }}>▶</button>
+            <button onClick={onPrevMonth} style={{ width: 38, height: 38, flex: 'none', borderRadius: 11, border: '1.5px solid var(--line)', background: 'var(--panel)', color: 'var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><ChevronLeft size={16} /></button>
+            <span style={{ fontFamily: "'Chonburi',cursive", fontSize: 16, minWidth: 158, textAlign: 'center' }}>{selMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</span>
+            <button onClick={onNextMonth} disabled={nextDisabled} style={{ width: 38, height: 38, flex: 'none', borderRadius: 11, border: '1.5px solid var(--line)', background: 'var(--panel)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: nextDisabled ? 'var(--disabled)' : 'var(--ink)', cursor: nextDisabled ? 'not-allowed' : 'pointer' }}><ChevronRight size={16} /></button>
           </div>
         )}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14 }}>
-        <StatCard label={isMonth ? 'ยอดขายรวมเดือน' : 'ยอดขายวันนี้'} value={money(todayTotal)} accent />
-        <StatCard label="จำนวนบิล" value={String(bills)} />
-        <StatCard label="ชิ้นที่ขายได้" value={String(itemsSold)} />
-        <StatCard label="เฉลี่ยต่อบิล" value={money(avg)} />
+        <StatCard label={isMonth ? 'ยอดขายรวมเดือน' : 'ยอดขายวันนี้'} value={money(todayTotal)} accent icon={<TrendingUp size={22} />} />
+        <StatCard label="จำนวนบิล" value={String(bills)} icon={<Receipt size={22} />} />
+        <StatCard label="ชิ้นที่ขายได้" value={String(itemsSold)} icon={<ShoppingBag size={22} />} />
+        <StatCard label="เฉลี่ยต่อบิล" value={money(avg)} icon={<BarChart3 size={22} />} />
       </div>
 
-      {isMonth && (
-        <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
-          <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>ยอดขายรายวัน · {selMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</div>
-          {dayKeys.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>ยังไม่มียอดขายในเดือนนี้ ลองขายสักรายการดูนะ</div>}
-          {dayKeys.length > 0 && <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>แตะวันที่เพื่อดูรายละเอียดของวันนั้น</div>}
-          {dayKeys.map((k) => (
-            <button
-              key={k}
-              onClick={() => setSelectedDay(k)}
-              className="day-row"
-              style={{ display: 'block', width: '100%', marginBottom: 6, padding: '7px 10px', border: 'none', borderRadius: 12, background: 'transparent', cursor: 'pointer', font: 'inherit', color: 'inherit', textAlign: 'left', transition: '.12s' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 13.5, fontWeight: 600 }}>วันที่ {k}</span>
-                <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>{money(dayAgg[k])}</span>
-              </div>
-              <div style={{ background: 'var(--bg)', borderRadius: 999 }}>
-                <div style={{ height: 8, borderRadius: 999, background: 'var(--brand)', width: Math.round((dayAgg[k] / dmax) * 100) + '%' }} />
-              </div>
-            </button>
-          ))}
+      <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <BarChart3 size={18} style={{ color: 'var(--brand)' }} />
+            <span style={{ fontFamily: "'Chonburi',cursive", fontSize: 17 }}>
+              {isMonth ? `ยอดขายรายวัน · ${selMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}` : 'ยอดขายรายชั่วโมงวันนี้'}
+            </span>
+          </div>
+          {isMonth && chartData.some(d => d.revenue > 0) && (
+            <div style={{ fontSize: 12, color: 'var(--muted)' }}>แตะแท่งกราฟเพื่อดูบิลของวันนั้น</div>
+          )}
         </div>
-      )}
+
+        {/* Chart Area */}
+        <div style={{ overflowX: 'auto', width: '100%', padding: '24px 0 5px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'space-between',
+              height: 175,
+              minWidth: isMonth ? 580 : 420,
+              padding: '0 4px',
+              gap: isMonth ? 4 : 6,
+            }}
+          >
+            {chartData.map((item, idx) => {
+              const hasSales = item.revenue > 0;
+              const heightPercent = hasSales ? Math.max(Math.round((item.revenue / maxRevenue) * 100), 4) : 2;
+              const dayNum = idx + 1;
+
+              return (
+                <div
+                  key={idx}
+                  onClick={() => {
+                    if (isMonth && hasSales) {
+                      setSelectedDay(dayNum);
+                    }
+                  }}
+                  className="chart-bar-container"
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    cursor: isMonth && hasSales ? 'pointer' : 'default',
+                    height: '100%',
+                    justifyContent: 'flex-end',
+                  }}
+                  title={`${item.label}: ${money(item.revenue)} (${item.orderCount} บิล)`}
+                >
+                  <div
+                    style={{
+                      width: '100%',
+                      height: 120,
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      background: 'rgba(0, 0, 0, 0.015)',
+                      borderRadius: 4,
+                      position: 'relative',
+                    }}
+                  >
+                    {/* Tooltip on Hover */}
+                    <div
+                      className="chart-tooltip"
+                      style={{
+                        position: 'absolute',
+                        bottom: `calc(${heightPercent}% + 6px)`,
+                        background: 'rgba(50, 40, 35, 0.9)',
+                        color: '#fff',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        padding: '5px 10px',
+                        borderRadius: 6,
+                        whiteSpace: 'nowrap',
+                        zIndex: 10,
+                        pointerEvents: 'none',
+                        opacity: 0,
+                        transition: 'opacity 0.15s',
+                        transform: 'translateX(-50%)',
+                        left: '50%',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                      }}
+                    >
+                      {money(item.revenue)}
+                    </div>
+                    {/* The Bar Fill */}
+                    <div
+                      className="chart-bar-fill"
+                      style={{
+                        width: '100%',
+                        height: `${heightPercent}%`,
+                        background: hasSales
+                          ? (isMonth ? 'var(--brand)' : 'var(--brand2, #397ae3)')
+                          : 'var(--line, #e6ded8)',
+                        borderRadius: '3px 3px 0 0',
+                        transition: 'height 0.3s ease',
+                      }}
+                    />
+                  </div>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      color: hasSales ? 'var(--ink)' : 'var(--muted)',
+                      marginTop: 6,
+                      fontWeight: hasSales ? 700 : 400,
+                    }}
+                  >
+                    {item.shortLabel}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 16 }}>
         <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
-          <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>สินค้าขายดี</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}><Crown size={18} style={{ color: 'var(--brand)' }} /><span style={{ fontFamily: "'Chonburi',cursive", fontSize: 17 }}>สินค้าขายดี</span></div>
           {topArr.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>ยังไม่มีข้อมูลการขาย ลองขายสักรายการดูนะ</div>}
           {topArr.map((t) => (
             <div key={t.name} style={{ marginBottom: 13 }}>
@@ -248,7 +360,7 @@ export default function ReportsScreen({
         </div>
 
         <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
-          <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>สินค้าใกล้หมด</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}><AlertTriangle size={18} style={{ color: 'var(--danger)' }} /><span style={{ fontFamily: "'Chonburi',cursive", fontSize: 17 }}>สินค้าใกล้หมด</span></div>
           {lowStock.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>สต็อกยังเพียงพอทุกรายการ</div>}
           {lowStock.map((p) => (
             <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
@@ -260,7 +372,7 @@ export default function ReportsScreen({
         </div>
 
         <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
-          <div style={{ fontFamily: "'Itim',cursive", fontSize: 18, marginBottom: 14 }}>ยอดขายตามหมวดหมู่</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}><PieChart size={18} style={{ color: 'var(--brand2)' }} /><span style={{ fontFamily: "'Itim',cursive", fontSize: 18 }}>ยอดขายตามหมวดหมู่</span></div>
           {catBreakdown.length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13, padding: '14px 0' }}>ยังไม่มีข้อมูล</div>}
           {catBreakdown.map((c) => (
             <div key={c.id} style={{ marginBottom: 13 }}>
@@ -277,9 +389,9 @@ export default function ReportsScreen({
 
         <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: '18px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
-            <div style={{ fontFamily: "'Itim',cursive", fontSize: 18 }}>{bq ? 'ผลค้นหาบิล' : 'บิลล่าสุด'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><History size={18} style={{ color: 'var(--muted)' }} /><span style={{ fontFamily: "'Itim',cursive", fontSize: 18 }}>{bq ? 'ผลค้นหาบิล' : 'บิลล่าสุด'}</span></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'var(--bg)', border: '1.5px solid var(--line)', borderRadius: 11, padding: '7px 12px', width: 190 }}>
-              <span style={{ fontSize: 13 }}>🔍</span>
+              <Search size={14} style={{ color: 'var(--muted)' }} />
               <input
                 value={billSearch}
                 onChange={(e) => setBillSearch(e.target.value)}
@@ -329,11 +441,14 @@ export default function ReportsScreen({
   );
 }
 
-function StatCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function StatCard({ label, value, accent, icon }: { label: string; value: string; accent?: boolean; icon?: React.ReactNode }) {
   return (
-    <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: 18 }}>
-      <div style={{ fontSize: 13, color: 'var(--muted)' }}>{label}</div>
-      <div style={{ fontFamily: "'Itim',cursive", fontSize: 30, color: accent ? 'var(--brand)' : 'var(--ink)', marginTop: 6 }}>{value}</div>
+    <div style={{ background: 'var(--panel)', border: '1.5px solid var(--line)', borderRadius: 18, padding: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div>
+        <div style={{ fontSize: 12.5, color: 'var(--muted)' }}>{label}</div>
+        <div style={{ fontFamily: "'Itim',cursive", fontSize: 34, color: accent ? 'var(--brand)' : 'var(--ink)', marginTop: 6, lineHeight: 1.1 }}>{value}</div>
+      </div>
+      {icon && <div style={{ color: accent ? 'var(--brand)' : 'var(--muted)', background: 'var(--bg)', width: 44, height: 44, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{icon}</div>}
     </div>
   );
 }
