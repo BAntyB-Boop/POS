@@ -151,11 +151,11 @@ export default function LoginScreen({ storeName, onLogin }: Props) {
 
       {loading && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 90, overflow: 'hidden' }}>
-          {/* ม่านเหล็กร้านค้าเลื่อนขึ้นเปิดร้าน — สีแบรนด์ก่อน พื้นหลังไล่ตามเป็นชั้นที่สอง */}
-          <div style={{ position: 'absolute', inset: '-40px 0 0 0', background: 'var(--brand)', backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,.12) 0 3px, transparent 3px 14px)', borderRadius: '4px 4px 0 0', transform: 'translateY(103%)', animation: 'waterrise .75s cubic-bezier(.33,.8,.4,1) forwards' }} />
-          <div style={{ position: 'absolute', inset: '-40px 0 0 0', background: 'var(--bg)', borderRadius: '4px 4px 0 0', transform: 'translateY(103%)', animation: 'waterrise .85s cubic-bezier(.33,.8,.4,1) .3s forwards' }} />
+          {/* น้ำสีแบรนด์ไหลขึ้นจากล่างคลุมจอ แล้วพื้นหลังไล่ตามเป็นคลื่นชั้นที่สอง */}
+          <div style={{ position: 'absolute', inset: '-40px 0 0 0', background: 'var(--brand)', borderRadius: '48% 52% 0 0 / 46px', transform: 'translateY(103%)', animation: 'waterrise .75s cubic-bezier(.33,.8,.4,1) forwards' }} />
+          <div style={{ position: 'absolute', inset: '-40px 0 0 0', background: 'var(--bg)', borderRadius: '52% 48% 0 0 / 46px', transform: 'translateY(103%)', animation: 'waterrise .85s cubic-bezier(.33,.8,.4,1) .3s forwards' }} />
 
-          {/* เหรียญทองลอยขึ้นตลอดช่วงเปิดร้าน */}
+          {/* particle ฟองน้ำลอยขึ้นตลอดช่วงโหลด */}
           {bubbles.map((b) => (
             <div
               key={b.id}
