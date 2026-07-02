@@ -11,6 +11,8 @@ import ReceiptModal from './components/ReceiptModal';
 import ProductModal from './components/ProductModal';
 import CategoryModal from './components/CategoryModal';
 import Toast from './components/Toast';
+import BottomNav from './components/BottomNav';
+import SettingsDrawer from './components/SettingsDrawer';
 import { usePos, type PosOptions } from './usePos';
 
 const USER_KEY = 'meow-pos-user';
@@ -28,6 +30,7 @@ function App(props: PosOptions) {
   const pos = usePos(props, user);
   // จอกว้างเปิด sidebar ไว้ก่อน จอแคบ (iPad แนวตั้ง/มือถือ) เริ่มแบบปิด
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1024);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleLogin = (u: User) => {
     setUser(u);
@@ -69,13 +72,14 @@ function App(props: PosOptions) {
         lowStockCount={pos.lowStockCount}
       />
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <main className="app-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <Header
           screen={pos.screen}
           productCount={pos.products.length}
           now={pos.now}
           onSetTheme={pos.setTheme}
           onToggleSidebar={() => setSidebarOpen((v) => !v)}
+          onOpenSettings={() => setSettingsOpen(true)}
           lowStockProducts={pos.products.filter((p) => p.stock <= p.reorderLevel)}
           onEditProduct={(id) => {
             pos.setScreen('products');
@@ -135,6 +139,15 @@ function App(props: PosOptions) {
           />
         )}
       </main>
+
+      <BottomNav screen={pos.screen} onNavigate={pos.setScreen} />
+
+      <SettingsDrawer
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        user={user}
+        onLogout={handleLogout}
+      />
 
       {pos.showPay && (
         <PayModal

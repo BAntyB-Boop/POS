@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Screen, ThemeName, Product } from '../types';
-import { Bell } from 'lucide-react';
+import { Bell, Settings } from 'lucide-react';
 
 interface Props {
   screen: Screen;
@@ -8,6 +8,7 @@ interface Props {
   now: number;
   onSetTheme: (t: ThemeName) => void;
   onToggleSidebar: () => void;
+  onOpenSettings: () => void;
   lowStockProducts: Product[];
   onEditProduct: (id: string) => void;
 }
@@ -17,7 +18,7 @@ const swatch = (bg: string): React.CSSProperties => ({
   boxShadow: '0 0 0 1.5px var(--line)', cursor: 'pointer', background: bg,
 });
 
-export default function Header({ screen, productCount, now, onSetTheme, onToggleSidebar, lowStockProducts, onEditProduct }: Props) {
+export default function Header({ screen, productCount, now, onSetTheme, onToggleSidebar, onOpenSettings, lowStockProducts, onEditProduct }: Props) {
   const title = screen === 'pos' ? 'ขายหน้าร้าน' : screen === 'products' ? 'จัดการสินค้า' : 'รายงานยอดขาย';
   const sub = screen === 'pos' ? 'เลือกสินค้าเพื่อเพิ่มลงตะกร้า' : screen === 'products' ? `${productCount} รายการในระบบ` : 'ภาพรวมการขายวันนี้';
   const d = new Date(now);
@@ -45,6 +46,7 @@ export default function Header({ screen, productCount, now, onSetTheme, onToggle
         <button
           onClick={onToggleSidebar}
           title="เปิด/ปิดเมนู"
+          className="hamburger-btn"
           style={{ width: 40, height: 40, flex: 'none', border: 'none', borderRadius: 12, background: 'transparent', cursor: 'pointer', fontSize: 20, color: 'var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
           ☰
@@ -176,10 +178,18 @@ export default function Header({ screen, productCount, now, onSetTheme, onToggle
           )}
         </div>
 
-        <div style={{ textAlign: 'right', paddingLeft: 4 }}>
+        <div className="header-clock-section" style={{ textAlign: 'right', paddingLeft: 4 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{clockLabel} น.</div>
           <div style={{ fontSize: 11, color: 'var(--muted)' }}>{dateLabel}</div>
         </div>
+
+        <button
+          onClick={onOpenSettings}
+          title="ตั้งค่า"
+          style={{ width: 36, height: 36, flex: 'none', borderRadius: 11, border: '1.5px solid var(--line)', background: 'var(--panel)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}
+        >
+          <Settings size={18} />
+        </button>
       </div>
     </header>
   );

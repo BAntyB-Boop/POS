@@ -127,3 +127,112 @@ button, input, select { font-family: 'IBM Plex Sans Thai', system-ui, sans-serif
   filter: brightness(0.92);
   box-shadow: 0 1px 6px rgba(0,0,0,0.15);
 }
+
+/* ---------- Bottom nav (phone/tablet) ---------- */
+.bottom-nav {
+  display: none;
+}
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+.bottom-nav-fab {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -32px;
+  border: 4px solid var(--panel);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.bottom-nav-item:active .bottom-nav-fab {
+  transform: scale(.93);
+}
+@media (max-width: 1024px) {
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 45;
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+    padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
+    box-shadow: 0 -6px 20px rgba(0, 0, 0, .06);
+  }
+  .app-main {
+    padding-bottom: calc(58px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 640px) {
+  .header-clock-section {
+    display: none !important;
+  }
+  .hamburger-btn {
+    display: none !important;
+  }
+  .app-sidebar {
+    display: none !important;
+  }
+  .sidebar-backdrop {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .pos-screen-layout {
+    flex-direction: column !important;
+  }
+  .cart-aside {
+    width: 100% !important;
+    border-left: none !important;
+    border-top: 1px solid var(--line) !important;
+    height: 320px !important;
+    flex: none !important;
+  }
+}
+
+/* ---------- Settings drawer (right side) ---------- */
+.settings-drawer {
+  width: 280px;
+  max-width: 85vw;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  box-shadow: -10px 0 40px rgba(0, 0, 0, .18);
+  z-index: 56;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 16px;
+  transform: translateX(105%);
+  transition: transform .25s ease;
+}
+.settings-drawer.open {
+  transform: translateX(0);
+}
+.settings-drawer-backdrop {
+  display: none;
+}
+.settings-drawer-backdrop.show {
+  display: block;
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 33, 24, .35);
+  z-index: 55;
+  animation: fade .18s ease;
+}
