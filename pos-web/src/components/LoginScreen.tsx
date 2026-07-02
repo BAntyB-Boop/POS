@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { User } from '../types';
 import { ROLE_LABELS, USERS } from '../data';
+import { api } from '../api';
 
 interface Props {
   storeName: string;
@@ -17,19 +18,19 @@ export default function LoginScreen({ storeName, onLogin }: Props) {
 
   useEffect(() => () => clearTimeout(loginTimer.current), []);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
-    const acc = USERS.find((u) => u.username === username.trim() && u.password === password);
-    if (!acc) {
-      setError('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่');
-      return;
-    }
-    // จำลองเวลาเรียก server — ตอนต่อ backend จริงให้เปลี่ยนเป็น await fetch แล้วคง loading state นี้ไว้
+    setError('');
     setLoading(true);
-    loginTimer.current = setTimeout(() => {
-      onLogin({ username: acc.username, name: acc.name, role: acc.role });
-    }, 2000);
+    try {
+      const { token, user } = await api.login(username, password);
+      localStorage.setItem('meow-pos-token', token);
+      onLogin(user);
+    } catch (err: any) {
+      setError(err?.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่');
+      setLoading(false);
+    }
   };
 
   const quickLogin = (username: string, password: string) => {

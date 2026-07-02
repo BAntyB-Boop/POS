@@ -16,10 +16,6 @@ import { usePos, type PosOptions } from './usePos';
 const USER_KEY = 'meow-pos-user';
 
 function App(props: PosOptions) {
-  const pos = usePos(props);
-  // จอกว้างเปิด sidebar ไว้ก่อน จอแคบ (iPad แนวตั้ง/มือถือ) เริ่มแบบปิด
-  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1024);
-
   const [user, setUser] = useState<User | null>(() => {
     try {
       const raw = localStorage.getItem(USER_KEY);
@@ -29,6 +25,10 @@ function App(props: PosOptions) {
     }
   });
 
+  const pos = usePos(props, user);
+  // จอกว้างเปิด sidebar ไว้ก่อน จอแคบ (iPad แนวตั้ง/มือถือ) เริ่มแบบปิด
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1024);
+
   const handleLogin = (u: User) => {
     setUser(u);
     localStorage.setItem(USER_KEY, JSON.stringify(u));
@@ -37,6 +37,7 @@ function App(props: PosOptions) {
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem('meow-pos-token');
   };
 
   return (
@@ -113,7 +114,6 @@ function App(props: PosOptions) {
           <ReportsScreen
             categories={pos.categories}
             products={pos.products}
-            sales={pos.sales}
             now={pos.now}
             reportPeriod={pos.reportPeriod}
             onSetPeriod={pos.setReportPeriod}

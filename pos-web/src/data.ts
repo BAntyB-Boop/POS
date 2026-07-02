@@ -6,12 +6,12 @@ export interface UserAccount extends User {
 }
 
 export const USERS: UserAccount[] = [
-  { username: 'mali', password: '1234', name: 'มะลิ', role: 'cashier' },
-  { username: 'admin', password: 'admin', name: 'คุณเหมียว', role: 'owner' },
+  { username: 'cashier', password: 'cashier123', name: 'มะลิ', role: 'cashier' },
+  { username: 'admin', password: 'admin123', name: 'คุณเหมียว', role: 'admin' },
 ];
 
 export const ROLE_LABELS: Record<UserRole, string> = {
-  owner: 'เจ้าของร้าน',
+  admin: 'เจ้าของร้าน',
   cashier: 'แคชเชียร์',
 };
 

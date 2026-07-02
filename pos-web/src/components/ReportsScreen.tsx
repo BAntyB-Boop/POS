@@ -1,15 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Category, Product, ReportPeriod, Sale } from '../types';
 import { tabStyle } from '../styleHelpers';
 import { money } from '../theme';
 import BillModal from './BillModal';
 import DayDetailModal from './DayDetailModal';
+import { api } from '../api';
 import Thumb from './Thumb';
 
 interface Props {
   categories: Category[];
   products: Product[];
-  sales: Sale[];
   now: number;
   reportPeriod: ReportPeriod;
   onSetPeriod: (p: ReportPeriod) => void;
@@ -19,63 +19,188 @@ interface Props {
   lowStockThreshold: number;
 }
 
+function toYmd(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const date = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${date}`;
+}
+
 export default function ReportsScreen({
-  categories, products, sales, now, reportPeriod, onSetPeriod, monthOffset, onPrevMonth, onNextMonth, lowStockThreshold,
+  categories, products, now, reportPeriod, onSetPeriod, monthOffset, onPrevMonth, onNextMonth, lowStockThreshold,
 }: Props) {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedBill, setSelectedBill] = useState<Sale | null>(null);
   const [billSearch, setBillSearch] = useState('');
 
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState({ revenue: 0, orderCount: 0, itemsSold: 0, avgPerOrder: 0 });
+  const [salesOverTime, setSalesOverTime] = useState<any[]>([]);
+  const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [salesByCategory, setSalesByCategory] = useState<any[]>([]);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [dayBills, setDayBills] = useState<any[]>([]);
+
   const isMonth = reportPeriod === 'month';
   const rnow = new Date(now);
   const selMonth = new Date(rnow.getFullYear(), rnow.getMonth() + monthOffset, 1);
-  const inPeriod = (ts: number) => {
-    const d = new Date(ts);
-    return isMonth
-      ? d.getMonth() === selMonth.getMonth() && d.getFullYear() === selMonth.getFullYear()
-      : d.toDateString() === rnow.toDateString();
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      setLoading(true);
+      try {
+        let fromYmd: string;
+        let toYmdStr: string;
+
+        if (reportPeriod === 'month') {
+          fromYmd = toYmd(selMonth);
+          const nextMonth = new Date(selMonth.getFullYear(), selMonth.getMonth() + 1, 1);
+          toYmdStr = toYmd(nextMonth);
+        } else {
+          fromYmd = toYmd(rnow);
+          const tomorrow = new Date(rnow);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          toYmdStr = toYmd(tomorrow);
+        }
+
+        const [sum, timeSales, top, byCat, recent] = await Promise.all([
+          api.getReportsSummary(fromYmd, toYmdStr),
+          api.getSalesOverTime(fromYmd, toYmdStr),
+          api.getTopProducts(fromYmd, toYmdStr),
+          api.getSalesByCategory(fromYmd, toYmdStr),
+          api.getRecentOrders(100),
+        ]);
+
+        if (active) {
+          setSummary(sum);
+          setSalesOverTime(timeSales);
+          setTopProducts(top);
+          setSalesByCategory(byCat);
+          setRecentOrders(recent);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error(err);
+        if (active) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      active = false;
+    };
+  }, [reportPeriod, monthOffset, now]);
+
+  useEffect(() => {
+    if (selectedDay === null) {
+      setDayBills([]);
+      return;
+    }
+    const dayVal = selectedDay;
+    let active = true;
+    async function loadDayBills() {
+      try {
+        const y = rnow.getFullYear();
+        const m = rnow.getMonth() + monthOffset;
+        const fromDate = new Date(y, m, dayVal);
+        const toDate = new Date(y, m, dayVal + 1);
+
+        const fromYmd = toYmd(fromDate);
+        const toYmdStr = toYmd(toDate);
+
+        const url = `http://localhost:3000/api/orders?from=${fromYmd}&to=${toYmdStr}&limit=200`;
+        const res = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('meow-pos-token')}`
+          }
+        });
+        const data = await res.json();
+        if (active && data.items) {
+          const mapped = data.items.map((d: any) => ({
+            no: d.id,
+            ts: typeof d.created_at === 'number' ? d.created_at : new Date(d.created_at).getTime(),
+            total: d.total_amount / 100,
+            method: d.payment_method === 'cash' ? 'cash' : 'qr',
+            received: d.received_amount / 100,
+            change: d.change_amount / 100,
+            note: d.description || '',
+            itemsCount: d.items_count,
+            cashierName: d.cashier_name,
+          }));
+          setDayBills(mapped);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadDayBills();
+    return () => {
+      active = false;
+    };
+  }, [selectedDay, monthOffset, now]);
+
+  const handleSelectBill = async (bill: any) => {
+    try {
+      const fullOrder = await api.getOrderDetails(bill.no);
+      setSelectedBill(fullOrder);
+    } catch (err: any) {
+      alert('ไม่สามารถดึงข้อมูลรายละเอียดบิลได้');
+    }
   };
-  const periodSales = sales.filter((x) => inPeriod(x.ts));
-  const todayTotal = periodSales.reduce((s, x) => s + x.total, 0);
-  const bills = periodSales.length;
-  const itemsSold = periodSales.reduce((s, x) => s + x.items.reduce((a, i) => a + i.qty, 0), 0);
-  const avg = bills ? Math.round(todayTotal / bills) : 0;
+
+  const todayTotal = summary.revenue;
+  const bills = summary.orderCount;
+  const itemsSold = summary.itemsSold;
+  const avg = summary.avgPerOrder;
 
   const dayAgg: Record<number, number> = {};
-  periodSales.forEach((x) => { const d = new Date(x.ts).getDate(); dayAgg[d] = (dayAgg[d] || 0) + x.total; });
+  salesOverTime.forEach((row) => {
+    const day = parseInt(row.date.split('-')[2], 10);
+    dayAgg[day] = row.revenue;
+  });
   const dayKeys = Object.keys(dayAgg).map(Number).sort((a, b) => a - b);
   const dvals = dayKeys.map((k) => dayAgg[k]);
   const dmax = dvals.length ? Math.max(...dvals) : 1;
 
-  const agg: Record<string, { name: string; qty: number; rev: number }> = {};
-  periodSales.forEach((x) => x.items.forEach((i) => {
-    if (!agg[i.name]) agg[i.name] = { name: i.name, qty: 0, rev: 0 };
-    agg[i.name].qty += i.qty;
-    agg[i.name].rev += i.lineTotal;
-  }));
-  const topArr = Object.values(agg).sort((a, b) => b.qty - a.qty).slice(0, 5);
+  const topArr = topProducts.map((t) => {
+    const p = products.find((x) => x.id === t.productId);
+    return {
+      name: t.productName,
+      icon: p ? p.icon : '📦',
+      qty: t.quantitySold,
+      rev: t.revenue,
+    };
+  });
   const maxQty = topArr.length ? topArr[0].qty : 1;
 
   const cagg: Record<string, number> = {};
-  periodSales.forEach((x) => x.items.forEach((i) => { cagg[i.cat] = (cagg[i.cat] || 0) + i.lineTotal; }));
+  salesByCategory.forEach((row) => {
+    cagg[row.categoryId] = row.revenue;
+  });
   const cvals = Object.values(cagg);
   const cmax = cvals.length ? Math.max(...cvals) : 1;
   const catBreakdown = categories.filter((c) => cagg[c.id]);
 
-  // ค้นหาบิลจากทุกช่วงเวลา (เลขบิลเป็นเลขรวมทั้งระบบ) ส่วนโหมดปกติแสดงเฉพาะบิลในช่วงที่เลือก
   const bq = billSearch.trim().toLowerCase();
   const recent = bq
-    ? sales.filter((s) => {
+    ? recentOrders.filter((s) => {
         const noStr = String(s.no);
         const padded = '#' + noStr.padStart(4, '0');
-        return noStr.includes(bq.replace(/^#/, '')) || padded.includes(bq) || s.items.some((i) => i.name.toLowerCase().includes(bq));
-      }).slice().reverse().slice(0, 10)
-    : periodSales.slice().reverse().slice(0, 6);
+        return noStr.includes(bq.replace(/^#/, '')) || padded.includes(bq) || (s.note && s.note.toLowerCase().includes(bq));
+      }).slice(0, 10)
+    : recentOrders.slice(0, 6);
+
   const lowStock = products.filter((p) => p.stock <= lowStockThreshold).sort((a, b) => a.stock - b.stock).slice(0, 8);
 
-  const dayBills = selectedDay != null ? periodSales.filter((s) => new Date(s.ts).getDate() === selectedDay) : [];
-
   const nextDisabled = monthOffset >= 0;
+
+  if (loading) {
+    return (
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+        <span className="spinner" />
+      </div>
+    );
+  }
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -189,7 +314,7 @@ export default function ReportsScreen({
           {recent.map((r) => (
             <button
               key={r.no}
-              onClick={() => setSelectedBill(r)}
+              onClick={() => handleSelectBill(r)}
               style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 4px', border: 'none', borderBottom: '1px solid var(--line)', background: 'transparent', cursor: 'pointer', font: 'inherit', color: 'inherit', textAlign: 'left' }}
             >
               <div>
@@ -197,7 +322,7 @@ export default function ReportsScreen({
                 <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>
                   {bq
                     ? new Date(r.ts).toLocaleString('th-TH', { day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' })
-                    : new Date(r.ts).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น. · {r.items.length} รายการ · {r.items.reduce((a, i) => a + i.qty, 0)} ชิ้น
+                    : new Date(r.ts).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น. · {r.items ? r.items.length : r.itemsCount} รายการ
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -214,7 +339,7 @@ export default function ReportsScreen({
           date={new Date(selMonth.getFullYear(), selMonth.getMonth(), selectedDay)}
           bills={dayBills}
           onClose={() => setSelectedDay(null)}
-          onSelectBill={(s) => setSelectedBill(s)}
+          onSelectBill={handleSelectBill}
         />
       )}
 

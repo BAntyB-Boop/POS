@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CATEGORIES, genHistory, makeInitialProducts } from './data';
 import { applyTheme } from './theme';
 import type {
-  CartMap, Category, CategoryForm, PayMethod, Product, ProductForm, ReportPeriod, Sale, Screen, ThemeName, Toast,
+  CartMap, Category, CategoryForm, PayMethod, Product, ProductForm, ReportPeriod, Sale, Screen, ThemeName, Toast, User,
 } from './types';
+import { api } from './api';
 
 export interface PosOptions {
   theme?: ThemeName;
@@ -11,11 +11,11 @@ export interface PosOptions {
   lowStockThreshold?: number;
 }
 
-export function usePos(opts: PosOptions = {}) {
+export function usePos(opts: PosOptions = {}, user: User | null) {
   const [screen, setScreen] = useState<Screen>('pos');
   const [theme, setThemeState] = useState<ThemeName>(opts.theme || 'peach');
-  const [categories, setCategories] = useState<Category[]>(CATEGORIES);
-  const [products, setProducts] = useState<Product[]>(() => makeInitialProducts());
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartMap>({});
   const [orderNote, setOrderNote] = useState('');
   const [search, setSearch] = useState('');
@@ -40,12 +40,39 @@ export function usePos(opts: PosOptions = {}) {
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>('day');
   const [monthOffset, setMonthOffset] = useState(0);
 
-  const [sales, setSales] = useState<Sale[]>(() => genHistory(makeInitialProducts()));
+  const [sales] = useState<Sale[]>([]);
   const [toastState, setToastState] = useState<Toast | null>(null);
   const [now, setNow] = useState(Date.now());
 
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const rootRef = useRef<HTMLDivElement | null>(null);
+
+  const toast = useCallback((msg: string, kind: 'ok' | 'warn' = 'ok') => {
+    clearTimeout(toastTimer.current);
+    setToastState({ msg, kind });
+    toastTimer.current = setTimeout(() => setToastState(null), 1800);
+  }, []);
+
+  const loadData = useCallback(async () => {
+    const token = localStorage.getItem('meow-pos-token');
+    if (!token) return;
+    try {
+      const [cats, prods] = await Promise.all([
+        api.getCategories(),
+        api.getProducts(),
+      ]);
+      setCategories(cats);
+      setProducts(prods);
+    } catch (err: any) {
+      toast(err?.message || 'ไม่สามารถโหลดข้อมูลจากเซิร์ฟเวอร์ได้', 'warn');
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    if (user) {
+      loadData();
+    }
+  }, [user, loadData]);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 15000);
@@ -58,11 +85,6 @@ export function usePos(opts: PosOptions = {}) {
     if (rootRef.current) applyTheme(rootRef.current, theme);
   }, [theme]);
 
-  const toast = useCallback((msg: string, kind: 'ok' | 'warn' = 'ok') => {
-    clearTimeout(toastTimer.current);
-    setToastState({ msg, kind });
-    toastTimer.current = setTimeout(() => setToastState(null), 1800);
-  }, []);
 
   const money = useCallback((v: number) => '฿' + Number(v || 0).toLocaleString('en-US'), []);
 
@@ -117,31 +139,42 @@ export function usePos(opts: PosOptions = {}) {
 
   const setCash = useCallback((v: string) => setCashReceived(String(v).replace(/[^0-9.]/g, '')), []);
 
-  const confirmPay = useCallback(() => {
+  const confirmPay = useCallback(async () => {
     const total = cartTotal;
     let received = total;
-    let change = 0;
     if (payMethod === 'cash') {
       received = parseFloat(cashReceived) || 0;
       if (received < total) { toast('รับเงินไม่พอ', 'warn'); return; }
-      change = received - total;
     }
     const items = Object.keys(cart).map((id) => {
-      const p = products.find((x) => x.id === id)!;
       const qty = cart[id];
-      return { id, name: p.name, icon: p.icon, img: p.img, cat: p.cat, price: p.price, qty, lineTotal: p.price * qty };
+      return {
+        product_id: parseInt(id, 10),
+        quantity: qty,
+      };
     });
-    const nextProducts = products.map((p) => (cart[p.id] ? { ...p, stock: Math.max(0, p.stock - cart[p.id]) } : p));
-    const sale: Sale = { no: sales.length + 1, ts: Date.now(), items, total, method: payMethod, received, change, note: orderNote.trim() };
-    setProducts(nextProducts);
-    setSales((prev) => prev.concat([sale]));
-    setCart({});
-    setOrderNote('');
-    setShowPay(false);
-    setShowReceipt(true);
-    setReceipt(sale);
-    toast('ขายสำเร็จ', 'ok');
-  }, [cart, cartTotal, cashReceived, orderNote, payMethod, products, sales.length, toast]);
+    try {
+      const sale = await api.checkout({
+        items,
+        payment_method: payMethod === 'cash' ? 'cash' : 'promptpay',
+        received_amount: payMethod === 'cash' ? Math.round(received * 100) : undefined,
+        discount: 0,
+        description: orderNote.trim(),
+      });
+
+      const updatedProducts = await api.getProducts();
+      setProducts(updatedProducts);
+
+      setCart({});
+      setOrderNote('');
+      setShowPay(false);
+      setShowReceipt(true);
+      setReceipt(sale);
+      toast('ขายสำเร็จ', 'ok');
+    } catch (err: any) {
+      toast(err?.message || 'เกิดข้อผิดพลาดในการทำรายการ', 'warn');
+    }
+  }, [cart, cartTotal, cashReceived, orderNote, payMethod, products, toast]);
 
   const closeReceipt = useCallback(() => setShowReceipt(false), []);
 
@@ -180,46 +213,54 @@ export function usePos(opts: PosOptions = {}) {
     toast('สแกนบาร์โค้ดแล้ว', 'ok');
   }, [updForm, toast]);
 
-  const saveProduct = useCallback(() => {
+  const saveProduct = useCallback(async () => {
     if (!form.name.trim()) { toast('กรุณาใส่ชื่อสินค้า', 'warn'); return; }
     const price = parseFloat(form.price) || 0;
     if (price <= 0) { toast('กรุณาใส่ราคา', 'warn'); return; }
-    const stock = parseInt(form.stock, 10) || 0;
-    if (editingId) {
-      setProducts((prev) => prev.map((p) => (p.id === editingId
-        ? { ...p, name: form.name.trim(), description: form.description.trim(), price, cat: form.cat, stock, barcode: form.barcode, icon: form.icon, img: form.img }
-        : p)));
+    try {
+      const saved = await api.saveProduct(form, editingId);
+      if (editingId) {
+        setProducts((prev) => prev.map((p) => (p.id === editingId ? saved : p)));
+        toast('บันทึกการแก้ไขแล้ว', 'ok');
+      } else {
+        setProducts((prev) => [saved, ...prev]);
+        setScreen('products');
+        toast('เพิ่มสินค้าใหม่แล้ว', 'ok');
+      }
       setShowProductModal(false);
-      toast('บันทึกการแก้ไขแล้ว', 'ok');
-    } else {
-      const id = 'p' + Date.now();
-      const np: Product = { id, name: form.name.trim(), description: form.description.trim(), price, cost: Math.round(price * 0.72), cat: form.cat, stock, barcode: form.barcode, icon: form.icon, img: form.img };
-      setProducts((prev) => [np, ...prev]);
-      setShowProductModal(false);
-      setScreen('products');
-      toast('เพิ่มสินค้าใหม่แล้ว', 'ok');
+    } catch (err: any) {
+      toast(err?.message || 'ไม่สามารถบันทึกสินค้าได้', 'warn');
     }
   }, [editingId, form, toast]);
 
-  const deleteProduct = useCallback((id: string) => {
-    setCart((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-    setProducts((prev) => prev.filter((p) => p.id !== id));
-    toast('ลบสินค้าแล้ว', 'ok');
+  const deleteProduct = useCallback(async (id: string) => {
+    try {
+      await api.deleteProduct(id);
+      setCart((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+      toast('ลบสินค้าแล้ว', 'ok');
+    } catch (err: any) {
+      toast(err?.message || 'ไม่สามารถลบสินค้าได้', 'warn');
+    }
   }, [toast]);
 
   const openCat = useCallback(() => { setShowCatModal(true); setCatForm({ name: '', icon: '' }); }, []);
   const closeCat = useCallback(() => setShowCatModal(false), []);
 
-  const saveCat = useCallback(() => {
+  const saveCat = useCallback(async () => {
     if (!catForm.name.trim()) { toast('กรุณาใส่ชื่อหมวดหมู่', 'warn'); return; }
-    const id = 'c' + Date.now();
-    setCategories((prev) => prev.concat([{ id, name: catForm.name.trim(), icon: '' }]));
-    setShowCatModal(false);
-    toast('เพิ่มหมวดหมู่แล้ว', 'ok');
+    try {
+      const saved = await api.saveCategory(catForm);
+      setCategories((prev) => prev.concat([saved]));
+      setShowCatModal(false);
+      toast('เพิ่มหมวดหมู่แล้ว', 'ok');
+    } catch (err: any) {
+      toast(err?.message || 'ไม่สามารถเพิ่มหมวดหมู่ได้', 'warn');
+    }
   }, [catForm, toast]);
 
   const setTheme = useCallback((t: ThemeName) => setThemeState(t), []);

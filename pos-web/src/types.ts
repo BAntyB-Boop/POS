@@ -1,5 +1,5 @@
 export type Screen = 'pos' | 'products' | 'reports';
-export type UserRole = 'owner' | 'cashier';
+export type UserRole = 'admin' | 'cashier';
 
 export interface User {
   username: string;

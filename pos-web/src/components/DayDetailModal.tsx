@@ -10,7 +10,7 @@ interface Props {
 
 export default function DayDetailModal({ date, bills, onClose, onSelectBill }: Props) {
   const total = bills.reduce((s, x) => s + x.total, 0);
-  const itemsSold = bills.reduce((s, x) => s + x.items.reduce((a, i) => a + i.qty, 0), 0);
+  const itemsSold = bills.reduce((s, x) => s + (x.items ? x.items.reduce((a, i) => a + i.qty, 0) : (x as any).itemsCount || 0), 0);
   const avg = bills.length ? Math.round(total / bills.length) : 0;
 
   return (
@@ -50,7 +50,7 @@ export default function DayDetailModal({ date, bills, onClose, onSelectBill }: P
             >
               <div>
                 <div style={{ fontSize: 13.5, fontWeight: 700 }}>#{String(b.no).padStart(4, '0')}</div>
-                <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{new Date(b.ts).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น. · {b.items.length} รายการ · {b.items.reduce((a, i) => a + i.qty, 0)} ชิ้น</div>
+                <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{new Date(b.ts).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น. · {b.items ? b.items.length : (b as any).itemsCount} รายการ</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--brand)' }}>{money(b.total)}</div>
