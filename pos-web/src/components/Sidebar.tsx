@@ -1,4 +1,5 @@
-import type { Screen } from '../types';
+import type { Screen, User } from '../types';
+import { ROLE_LABELS } from '../data';
 
 interface Props {
   storeName: string;
@@ -6,6 +7,8 @@ interface Props {
   onNavigate: (s: Screen) => void;
   open: boolean;
   onClose: () => void;
+  user: User;
+  onLogout: () => void;
 }
 
 const navStyle = (active: boolean): React.CSSProperties => ({
@@ -15,7 +18,7 @@ const navStyle = (active: boolean): React.CSSProperties => ({
   color: active ? 'var(--brand)' : 'var(--muted)', font: 'inherit',
 });
 
-export default function Sidebar({ storeName, screen, onNavigate, open, onClose }: Props) {
+export default function Sidebar({ storeName, screen, onNavigate, open, onClose, user, onLogout }: Props) {
   const navigate = (s: Screen) => {
     onNavigate(s);
     // บนจอแคบ sidebar เป็น overlay — เลือกเมนูแล้วปิดให้เอง
@@ -26,16 +29,8 @@ export default function Sidebar({ storeName, screen, onNavigate, open, onClose }
     <div className={'sidebar-backdrop' + (open ? ' show' : '')} onClick={onClose} />
     <aside className={'app-sidebar' + (open ? '' : ' closed')}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '4px 6px 18px' }}>
-        <div style={{ width: 44, height: 44, flex: 'none', borderRadius: 15, background: 'var(--soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'floaty 4s ease-in-out infinite' }}>
-          <svg width="30" height="30" viewBox="0 0 40 40" fill="none">
-            <path d="M7 5 L15 16 L7 19 Z" fill="var(--brand)" />
-            <path d="M33 5 L25 16 L33 19 Z" fill="var(--brand)" />
-            <circle cx="20" cy="23" r="13" fill="var(--brand)" />
-            <circle cx="15.5" cy="21" r="1.9" fill="#fff" />
-            <circle cx="24.5" cy="21" r="1.9" fill="#fff" />
-            <path d="M18.5 25.5 Q20 27 21.5 25.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-            <path d="M20 24 l-1.4 -1.6 h2.8 z" fill="#fff" />
-          </svg>
+        <div style={{ width: 44, height: 44, flex: 'none', borderRadius: 15, background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: "'Itim',cursive", fontSize: 22 }}>
+          {storeName.trim().charAt(0)}
         </div>
         <div>
           <div style={{ fontFamily: "'Itim',cursive", fontSize: 20, lineHeight: 1, color: 'var(--ink)' }}>{storeName}</div>
@@ -43,18 +38,27 @@ export default function Sidebar({ storeName, screen, onNavigate, open, onClose }
         </div>
       </div>
 
-      <button onClick={() => navigate('pos')} style={navStyle(screen === 'pos')}><span style={{ fontSize: 18 }}>🛒</span><span>ขายหน้าร้าน</span></button>
-      <button onClick={() => navigate('products')} style={navStyle(screen === 'products')}><span style={{ fontSize: 18 }}>📦</span><span>จัดการสินค้า</span></button>
-      <button onClick={() => navigate('reports')} style={navStyle(screen === 'reports')}><span style={{ fontSize: 18 }}>📊</span><span>รายงานยอดขาย</span></button>
+      <button onClick={() => navigate('pos')} style={navStyle(screen === 'pos')}><span>ขายหน้าร้าน</span></button>
+      <button onClick={() => navigate('products')} style={navStyle(screen === 'products')}><span>จัดการสินค้า</span></button>
+      <button onClick={() => navigate('reports')} style={navStyle(screen === 'reports')}><span>รายงานยอดขาย</span></button>
 
       <div style={{ flex: 1 }} />
 
       <div style={{ padding: 14, borderRadius: 16, background: 'var(--bg)', display: 'flex', alignItems: 'center', gap: 11 }}>
-        <div style={{ width: 40, height: 40, flex: 'none', borderRadius: '50%', background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🐱</div>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>มะลิ</div>
-          <div style={{ fontSize: 11, color: 'var(--muted)' }}>แคชเชียร์</div>
+        <div style={{ width: 40, height: 40, flex: 'none', borderRadius: '50%', background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 700, color: '#fff' }}>
+          {user.name.trim().charAt(0)}
         </div>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</div>
+          <div style={{ fontSize: 11, color: 'var(--muted)' }}>{ROLE_LABELS[user.role]}</div>
+        </div>
+        <button
+          onClick={onLogout}
+          title="ออกจากระบบ"
+          style={{ flex: 'none', border: '1px solid var(--line)', borderRadius: 10, background: 'var(--panel)', cursor: 'pointer', fontSize: 11.5, fontWeight: 600, padding: '7px 10px', color: 'var(--muted)' }}
+        >
+          ออก
+        </button>
       </div>
     </aside>
     </>

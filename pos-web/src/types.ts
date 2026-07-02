@@ -1,4 +1,11 @@
 export type Screen = 'pos' | 'products' | 'reports';
+export type UserRole = 'owner' | 'cashier';
+
+export interface User {
+  username: string;
+  name: string;
+  role: UserRole;
+}
 export type ThemeName = 'peach' | 'mint' | 'grape';
 export type PayMethod = 'cash' | 'qr';
 export type ReportPeriod = 'day' | 'month';

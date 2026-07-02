@@ -25,10 +25,10 @@ export function usePos(opts: PosOptions = {}) {
 
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<ProductForm>({ name: '', description: '', price: '', cat: 'drink', stock: '', barcode: '', icon: '📦', img: null });
+  const [form, setForm] = useState<ProductForm>({ name: '', description: '', price: '', cat: 'drink', stock: '', barcode: '', icon: '', img: null });
 
   const [showCatModal, setShowCatModal] = useState(false);
-  const [catForm, setCatForm] = useState<CategoryForm>({ name: '', icon: '🏷️' });
+  const [catForm, setCatForm] = useState<CategoryForm>({ name: '', icon: '' });
 
   const [showPay, setShowPay] = useState(false);
   const [payMethod, setPayMethod] = useState<PayMethod>('cash');
@@ -140,7 +140,7 @@ export function usePos(opts: PosOptions = {}) {
     setShowPay(false);
     setShowReceipt(true);
     setReceipt(sale);
-    toast('ขายสำเร็จ 🎉', 'ok');
+    toast('ขายสำเร็จ', 'ok');
   }, [cart, cartTotal, cashReceived, orderNote, payMethod, products, sales.length, toast]);
 
   const closeReceipt = useCallback(() => setShowReceipt(false), []);
@@ -148,7 +148,7 @@ export function usePos(opts: PosOptions = {}) {
   const openAdd = useCallback(() => {
     setShowProductModal(true);
     setEditingId(null);
-    setForm({ name: '', description: '', price: '', cat: categories[0]?.id || '', stock: '', barcode: '', icon: '📦', img: null });
+    setForm({ name: '', description: '', price: '', cat: categories[0]?.id || '', stock: '', barcode: '', icon: '', img: null });
   }, [categories]);
 
   const openEdit = useCallback((id: string) => {
@@ -197,7 +197,7 @@ export function usePos(opts: PosOptions = {}) {
       setProducts((prev) => [np, ...prev]);
       setShowProductModal(false);
       setScreen('products');
-      toast('เพิ่มสินค้าใหม่แล้ว 🐾', 'ok');
+      toast('เพิ่มสินค้าใหม่แล้ว', 'ok');
     }
   }, [editingId, form, toast]);
 
@@ -211,13 +211,13 @@ export function usePos(opts: PosOptions = {}) {
     toast('ลบสินค้าแล้ว', 'ok');
   }, [toast]);
 
-  const openCat = useCallback(() => { setShowCatModal(true); setCatForm({ name: '', icon: '🏷️' }); }, []);
+  const openCat = useCallback(() => { setShowCatModal(true); setCatForm({ name: '', icon: '' }); }, []);
   const closeCat = useCallback(() => setShowCatModal(false), []);
 
   const saveCat = useCallback(() => {
     if (!catForm.name.trim()) { toast('กรุณาใส่ชื่อหมวดหมู่', 'warn'); return; }
     const id = 'c' + Date.now();
-    setCategories((prev) => prev.concat([{ id, name: catForm.name.trim(), icon: catForm.icon || '🏷️' }]));
+    setCategories((prev) => prev.concat([{ id, name: catForm.name.trim(), icon: '' }]));
     setShowCatModal(false);
     toast('เพิ่มหมวดหมู่แล้ว', 'ok');
   }, [catForm, toast]);
@@ -244,6 +244,6 @@ export function usePos(opts: PosOptions = {}) {
     openAdd, openEdit, closeProduct, onImg, genBarcode, saveProduct, deleteProduct,
     openCat, closeCat, saveCat,
     lowStockThreshold: opts.lowStockThreshold ?? 5,
-    storeName: opts.storeName || 'Meow Mart',
+    storeName: opts.storeName || 'โชคดีการค้า',
   };
 }

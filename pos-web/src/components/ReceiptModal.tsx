@@ -10,13 +10,13 @@ export default function ReceiptModal({ receipt, onClose }: Props) {
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(58,46,42,.45)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 70, padding: 20, animation: 'fade .18s ease' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 360, maxWidth: '100%', background: 'var(--panel)', borderRadius: 24, padding: '26px 24px', textAlign: 'center', animation: 'pop .22s ease', boxShadow: '0 30px 70px rgba(0,0,0,.3)' }}>
-        <div style={{ fontSize: 54, animation: 'floaty 3s ease-in-out infinite' }}>😸</div>
-        <div style={{ fontFamily: "'Itim',cursive", fontSize: 24, marginTop: 4 }}>ขายสำเร็จ!</div>
+        <div style={{ width: 62, height: 62, margin: '0 auto', borderRadius: '50%', background: 'var(--ok)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 30, fontWeight: 700 }}>✓</div>
+        <div style={{ fontFamily: "'Itim',cursive", fontSize: 24, marginTop: 10 }}>ขายสำเร็จ!</div>
         <div style={{ fontSize: 12.5, color: 'var(--muted)' }}>#{String(receipt.no).padStart(4, '0')} · {new Date(receipt.ts).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
         <div style={{ textAlign: 'left', background: 'var(--bg)', borderRadius: 16, padding: '14px 16px', margin: '18px 0' }}>
           {receipt.items.map((i) => (
             <div key={i.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, padding: '4px 0' }}>
-              <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{i.icon} {i.name} <span style={{ color: 'var(--muted)' }}>x{i.qty}</span></span>
+              <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{i.name} <span style={{ color: 'var(--muted)' }}>x{i.qty}</span></span>
               <span style={{ fontWeight: 600, whiteSpace: 'nowrap', paddingLeft: 8 }}>{money(i.lineTotal)}</span>
             </div>
           ))}
@@ -31,7 +31,7 @@ export default function ReceiptModal({ receipt, onClose }: Props) {
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--muted)', marginTop: 5 }}><span>ชำระโดย</span><span>{receipt.method === 'cash' ? 'เงินสด' : 'พร้อมเพย์'}</span></div>
           {receipt.note && (
             <div style={{ marginTop: 10, padding: '9px 12px', background: 'var(--soft)', borderRadius: 11, fontSize: 12.5, color: 'var(--ink)', textAlign: 'left' }}>
-              📝 {receipt.note}
+              {receipt.note}
             </div>
           )}
         </div>

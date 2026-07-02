@@ -30,8 +30,8 @@ export default function PayModal({ total, payMethod, onSetMethod, cashReceived, 
           <div style={{ fontFamily: "'Itim',cursive", fontSize: 42, color: 'var(--brand)', lineHeight: 1.1 }}>{money(total)}</div>
         </div>
         <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
-          <button onClick={() => onSetMethod('cash')} style={tabStyle(payMethod === 'cash')}>💵 เงินสด</button>
-          <button onClick={() => onSetMethod('qr')} style={tabStyle(payMethod === 'qr')}>📱 พร้อมเพย์</button>
+          <button onClick={() => onSetMethod('cash')} style={tabStyle(payMethod === 'cash')}>เงินสด</button>
+          <button onClick={() => onSetMethod('qr')} style={tabStyle(payMethod === 'qr')}>พร้อมเพย์</button>
         </div>
         {payMethod === 'cash' && (
           <>
@@ -63,7 +63,7 @@ export default function PayModal({ total, payMethod, onSetMethod, cashReceived, 
           disabled={!canConfirm}
           style={{ width: '100%', padding: 15, borderRadius: 15, border: 'none', cursor: canConfirm ? 'pointer' : 'not-allowed', fontSize: 16, fontWeight: 800, color: '#fff', background: canConfirm ? 'var(--brand)' : '#d9cfc9', boxShadow: canConfirm ? 'var(--shadow)' : 'none', font: 'inherit' }}
         >
-          ยืนยันการชำระเงิน 🐾
+          ยืนยันการชำระเงิน
         </button>
       </div>
     </div>

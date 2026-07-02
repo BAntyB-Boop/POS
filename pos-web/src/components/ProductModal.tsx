@@ -1,7 +1,6 @@
 import type { ChangeEvent } from 'react';
 import type { Category, ProductForm } from '../types';
-import { ICON_OPTIONS } from '../data';
-import { iconChipStyle } from '../styleHelpers';
+import Thumb from './Thumb';
 
 interface Props {
   isEditing: boolean;
@@ -23,28 +22,17 @@ export default function ProductModal({ isEditing, form, categories, onUpdate, on
           <button onClick={onClose} style={{ width: 32, height: 32, border: 'none', borderRadius: '50%', background: 'var(--bg)', cursor: 'pointer', fontSize: 16, color: 'var(--muted)' }}>✕</button>
         </div>
 
-        <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
+        <div style={{ display: 'flex', gap: 16, marginBottom: 16, alignItems: 'flex-start' }}>
           <div style={{ flex: 'none' }}>
-            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 7 }}>รูป / ไอคอน</div>
-            {form.img ? (
-              <div style={{ width: 84, height: 84, borderRadius: 16, overflow: 'hidden', background: 'var(--soft)' }}>
-                <img src={form.img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-            ) : (
-              <div style={{ width: 84, height: 84, borderRadius: 16, background: 'var(--soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 46 }}>{form.icon}</div>
-            )}
-            <label style={{ display: 'block', textAlign: 'center', marginTop: 8, fontSize: 12, color: 'var(--brand)', fontWeight: 600, cursor: 'pointer' }}>
-              📷 อัพโหลดรูป
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 7 }}>รูปสินค้า</div>
+            <Thumb name={form.name} img={form.img} size={84} radius={16} fontSize={34} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0, alignSelf: 'flex-end' }}>
+            <label style={{ display: 'inline-block', padding: '10px 16px', borderRadius: 12, border: '1.5px solid var(--line)', background: 'var(--bg)', fontSize: 13, color: 'var(--brand)', fontWeight: 600, cursor: 'pointer' }}>
+              อัพโหลดรูป
               <input type="file" accept="image/*" onChange={onImg} style={{ display: 'none' }} />
             </label>
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 7 }}>เลือกไอคอนน่ารักๆ</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,1fr)', gap: 6 }}>
-              {ICON_OPTIONS.map((em) => (
-                <button key={em} onClick={() => onUpdate('icon', em)} style={iconChipStyle(form.icon === em && !form.img)}>{em}</button>
-              ))}
-            </div>
+            <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 7 }}>ถ้าไม่ใส่รูป ระบบจะแสดงตัวอักษรแรกของชื่อสินค้าแทน</div>
           </div>
         </div>
 
@@ -68,7 +56,7 @@ export default function ProductModal({ isEditing, form, categories, onUpdate, on
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>หมวดหมู่</div>
             <select value={form.cat} onChange={(e) => onUpdate('cat', e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-              {categories.map((c) => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div style={{ width: 120 }}>
@@ -85,7 +73,7 @@ export default function ProductModal({ isEditing, form, categories, onUpdate, on
           <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>บาร์โค้ด</div>
           <div style={{ display: 'flex', gap: 9 }}>
             <input value={form.barcode} onChange={(e) => onUpdate('barcode', e.target.value)} placeholder="สแกนหรือพิมพ์บาร์โค้ด" style={{ ...inputStyle, flex: 1 }} />
-            <button onClick={onGenBarcode} style={{ padding: '0 16px', borderRadius: 12, border: '1.5px solid var(--line)', background: 'var(--panel)', color: 'var(--ink)', font: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>📷 สแกน</button>
+            <button onClick={onGenBarcode} style={{ padding: '0 16px', borderRadius: 12, border: '1.5px solid var(--line)', background: 'var(--panel)', color: 'var(--ink)', font: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>สแกน</button>
           </div>
         </div>
 
